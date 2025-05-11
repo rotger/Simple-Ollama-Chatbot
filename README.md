@@ -4,8 +4,8 @@ A simple Ollama chatbot that is easy to install and use.
 ### Instructions
 1. Install Ollama.
 1. Install your favorite model. For example, you can use the following command to install the qwen3 model: ```ollama pull qwen3```.
-1. Set environnement variable ```OLLAMA_ORIGINS=*```. On windows, you can set it simply by running this powershell command: ```[Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS","*","User")```.
-1. Make sure Ollama is running. Either by doing doing ```ollama serve``` in a terminal or by opening ollama.exe.
+1. Set environment variable ```OLLAMA_ORIGINS=*```. On windows, you can set it simply by running this powershell command: ```[Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS","*","User")```.
+1. Make sure Ollama is running. Either by doing ```ollama serve``` in a terminal or by opening ollama.exe.
 1. Copy the file ```simple_chatbot.html``` to your disk.
 1. Open the file ```simple_chatbot.html``` in a web browser.
 
