@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ollama Standalone Chat</title>
 
-    <!-- Prism.js CSS (GitHub theme) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
@@ -13,8 +12,8 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
             height: 100vh;
             margin: 0;
-            background-color: #f6f8fa; /* GitHub page background */
-            color: #24292f; /* GitHub default text color */
+            background-color: #f6f8fa;
+            color: #24292f;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -28,20 +27,20 @@
             height: 95vh;
             width: 100%;
             max-width: 800px;
-            border: 1px solid #d0d7de; /* GitHub border color */
-            border-radius: 6px; /* GitHub border radius */
-            box-shadow: 0 1px 0 rgba(27,31,36,0.04), 0 3px 6px rgba(27,31,36,0.1); /* Softer shadow */
-            background-color: #ffffff; /* GitHub panel background */
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(27,31,36,0.04), 0 3px 6px rgba(27,31,36,0.1);
+            background-color: #ffffff;
             overflow: hidden;
         }
 
-        .header-section { /* Common class for top sections */
+        .header-section {
             padding: 16px;
-            background-color: #f6f8fa; /* GitHub header/footer bar color */
+            background-color: #f6f8fa;
             border-bottom: 1px solid #d0d7de;
         }
 
-            .header-section label:not(.collapsible-header-label) { /* Exclude collapsible header acting as label */
+            .header-section label:not(.collapsible-header-label) {
                 font-weight: 600;
                 margin-bottom: 8px;
                 display: block;
@@ -67,7 +66,7 @@
                 .header-section select:focus,
                 .header-section textarea:focus,
                 .header-section input[type="text"]:focus {
-                    border-color: #0969da; /* GitHub focus blue */
+                    border-color: #0969da;
                     outline: none;
                     box-shadow: inset 0 1px 0 rgba(27,31,36,0.075), 0 0 0 3px rgba(9,105,218,0.3);
                 }
@@ -172,7 +171,7 @@
                 margin-top: 8px;
             }
 
-            .message-bubble .attachment-note { /* Style for the attachment note in user messages */
+            .message-bubble .attachment-note {
                 font-size: 0.85em;
                 color: #57606a;
                 margin-bottom: 6px;
@@ -232,52 +231,84 @@
                     font-size: 80%;
                 }
 
-        #file-info-area { /* Styles for the area displaying attached file info */
-            padding: 8px 16px;
+        #file-management-area {
+            padding: 10px;
             border-top: 1px solid #d0d7de;
-            background-color: #ffffff; /* Match chat input background */
-            font-size: 13px;
-            color: #57606a;
-            display: none; /* Initially hidden */
-            align-items: center;
-            justify-content: space-between;
+            border-bottom: 1px solid #d0d7de;
+            background-color: #f9f9f9;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
         }
 
-            #file-info-area span#attached-file-name {
-                font-weight: 600;
-                margin-right: 10px;
+            #file-management-area.drag-over {
+                background-color: #e8f0fe;
+                border-style: dashed;
+            }
+
+            #file-management-area.disabled-drop-zone {
+                pointer-events: none;
+                opacity: 0.7;
+            }
+
+        #drop-zone-instruction {
+            margin: 5px 0;
+            color: #57606a;
+            font-size: 13px;
+        }
+
+        #selected-files-container {
+            margin-top: 8px;
+            text-align: left;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 8px;
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #24292f;
+        }
+
+            .file-item span {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                flex-grow: 1; /* Allow filename to take available space */
+                margin-right: 8px;
+                flex-grow: 1;
             }
 
-            #file-info-area #clear-file-button {
-                padding: 4px 10px;
-                font-size: 12px;
-                font-weight: 600;
-                color: #cf222e; /* GitHub danger color */
-                background-color: #f6f8fa; /* Lighter background */
-                border: 1px solid rgba(207,34,46,0.4);
-                border-radius: 6px;
-                cursor: pointer;
-                transition: all 0.1s ease-in-out;
-                flex-shrink: 0; /* Prevent shrinking */
+        .remove-file-btn {
+            background: none;
+            border: 1px solid transparent;
+            color: #cf222e;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 4px;
+            line-height: 1;
+        }
+
+            .remove-file-btn:hover {
+                color: white;
+                background-color: #cf222e;
+                border-color: #a40e26;
             }
 
-                #file-info-area #clear-file-button:hover {
-                    background-color: #cf222e;
-                    color: white;
-                    border-color: #cf222e;
-                }
 
         .chat-input-area {
             display: flex;
             padding: 16px;
-            border-top: 1px solid #d0d7de;
             background-color: #ffffff;
             gap: 8px;
-            align-items: flex-start; /* Align items to the top, good for multi-line textarea */
+            align-items: flex-start;
         }
 
             .chat-input-area textarea {
@@ -290,7 +321,7 @@
                 font-size: 14px;
                 line-height: 20px;
                 box-shadow: inset 0 1px 0 rgba(27,31,36,0.075);
-                min-height: 38px; /* Ensure min height matches buttons */
+                min-height: 38px;
             }
 
                 .chat-input-area textarea:focus {
@@ -299,7 +330,7 @@
                     box-shadow: inset 0 1px 0 rgba(27,31,36,0.075), 0 0 0 3px rgba(9,105,218,0.3);
                 }
 
-            .chat-input-area button { /* Common style for buttons in input area */
+            .chat-input-area button {
                 border-radius: 6px;
                 padding: 8px 16px;
                 border: 1px solid rgba(27,31,36,0.15);
@@ -307,23 +338,9 @@
                 font-size: 14px;
                 font-weight: 600;
                 transition: background-color 0.1s ease-in-out;
-                height: 38px; /* Standard height */
-                line-height: 20px; /* Standard line height */
-                flex-shrink: 0; /* Prevent buttons from shrinking */
-            }
-
-        #attach-file-button { /* Specific style for attach button */
-            width: 38px; /* Square size */
-            padding: 0; /* Remove padding for icon */
-            font-size: 1.5em; /* Adjust icon size */
-            color: #24292f;
-            background-color: #f6f8fa;
-            /* border, cursor, radius, transition, height, line-height inherited or set by common button style */
-        }
-
-            #attach-file-button:hover {
-                background-color: #f3f4f6;
-                border-color: rgba(27,31,36,0.25);
+                height: 38px;
+                line-height: 20px;
+                flex-shrink: 0;
             }
 
         #send-button {
@@ -351,7 +368,6 @@
                 background-color: #a40e26;
             }
 
-        /* Markdown specific styles (GitHub-like) - unchanged */
         .message-content pre {
             background-color: #f6f8fa;
             color: #24292f;
@@ -465,32 +481,27 @@
         </div>
 
         <div class="chat-messages" id="chat-messages-area">
-            <!-- Messages will be appended here -->
         </div>
 
-        <div id="file-info-area">
-            File: <span id="attached-file-name"></span>
-            <button id="clear-file-button">Remove</button>
+        <div id="file-management-area">
+            <input type="file" id="file-input-hidden" style="display: none;" accept=".txt,.md,.json,.csv,.py,.js,.html,.css,.xml,text/*,application/pdf,image/*" multiple>
+            <div id="selected-files-container">
+            </div>
+            <p id="drop-zone-instruction">Drag & Drop Files Here or Click to Upload</p>
         </div>
 
         <div class="chat-input-area">
             <textarea id="user-input" placeholder="Type your message (Shift+Enter for new line)..." rows="1"></textarea>
-            <input type="file" id="file-input-hidden" style="display: none;" accept=".txt,.md,.json,.csv,.py,.js,.html,.css,.xml,text/*,application/pdf,image/*">
-            <button id="attach-file-button" title="Attach File">📎</button>
             <button id="send-button">Send</button>
             <button id="reset-chat-button">Reset Chat</button>
         </div>
     </div>
 
-    <!-- Marked.js for Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-    <!-- Prism.js Core & Autoloader for syntax highlighting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <!-- MathJax Configuration & Script -->
     <script>
         window.MathJax = {
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']], processEscapes: true },
@@ -499,6 +510,16 @@
         };
     </script>
     <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        } else {
+            console.warn("pdf.js library not loaded. PDF parsing will not be available.");
+        }
+    </script>
 
     <script>
         let OLLAMA_API_URL = "http://localhost:11434";
@@ -514,18 +535,16 @@
         const ollamaUrlInput = document.getElementById('ollama-url-input');
         const updateOllamaUrlButton = document.getElementById('update-ollama-url-button');
 
-        // File attachment elements
-        const attachFileButton = document.getElementById('attach-file-button');
+        const fileManagementArea = document.getElementById('file-management-area');
         const fileInputHidden = document.getElementById('file-input-hidden');
-        const fileInfoArea = document.getElementById('file-info-area');
-        const attachedFileNameSpan = document.getElementById('attached-file-name');
-        const clearFileButton = document.getElementById('clear-file-button');
+        const selectedFilesContainer = document.getElementById('selected-files-container');
+        const dropZoneInstruction = document.getElementById('drop-zone-instruction');
 
         let conversationHistory = [];
         let isAwaitingResponse = false;
         let currentAiMessageElement = null;
         let currentAiMessageContentDiv = null;
-        let attachedFile = null; // Will store { name: string, content: string, type: string }
+        let attachedFiles = [];
 
         const THINK_TAG_PLACEHOLDER_PREFIX = "%%THINK_BLOCK_ID_";
         const THINK_TAG_PLACEHOLDER_SUFFIX = "%%";
@@ -580,7 +599,7 @@
             });
         }
 
-        function displayMessage(sender, textContent, isStreaming = false, attachmentFilename = null) {
+        function displayMessage(sender, textContent, isStreaming = false, attachedFilenamesArray = null) {
             const messageBubble = document.createElement('div');
             messageBubble.classList.add('message-bubble', sender.toLowerCase() + '-message');
 
@@ -589,11 +608,11 @@
             senderDiv.textContent = sender === 'User' ? 'You' : (modelSelect.value.split(':')[0] || 'AI');
             messageBubble.appendChild(senderDiv);
 
-            if (sender === 'User' && attachmentFilename) {
+            if (sender === 'User' && attachedFilenamesArray && attachedFilenamesArray.length > 0) {
                 const attachmentNoteDiv = document.createElement('div');
                 attachmentNoteDiv.classList.add('attachment-note');
-                // Use escapeHTML for the filename displayed in the chat
-                attachmentNoteDiv.innerHTML = `Attached file: ${escapeHTML(attachmentFilename)}`;
+                const filenamesString = attachedFilenamesArray.map(name => escapeHTML(name)).join(', ');
+                attachmentNoteDiv.innerHTML = `Attached file(s): ${filenamesString}`;
                 messageBubble.appendChild(attachmentNoteDiv);
             }
 
@@ -640,14 +659,14 @@
             thinkBlocks.forEach(block => {
                 const placeholder = `${THINK_TAG_PLACEHOLDER_PREFIX}${block.id}${THINK_TAG_PLACEHOLDER_SUFFIX}`;
                 const thinkSectionHtml = `
-                            <div class="collapsible-think-section">
-                                <div class="think-header" data-think-block-id="${block.id}">
-                                    <span>AI Thoughts</span> <span class="toggle-icon">[+]</span>
-                                </div>
-                                <div class="think-content" id="think-content-${block.id}" style="display:none;">
-                                    ${marked.parse(block.rawContent)}
-                                </div>
-                            </div>`;
+                                    <div class="collapsible-think-section">
+                                        <div class="think-header" data-think-block-id="${block.id}">
+                                            <span>AI Thoughts</span> <span class="toggle-icon">[+]</span>
+                                        </div>
+                                        <div class="think-content" id="think-content-${block.id}" style="display:none;">
+                                            ${marked.parse(block.rawContent)}
+                                        </div>
+                                    </div>`;
                 const placeholderRegExp = new RegExp(RegExp.escape(placeholder), 'g');
                 html = html.replace(placeholderRegExp, thinkSectionHtml);
             });
@@ -708,18 +727,21 @@
         }
 
         async function sendMessage() {
-            const messageText = userInput.value.trim(); // User's typed message
+            const messageText = userInput.value.trim();
             const selectedModel = modelSelect.value;
             const systemPrompt = systemPromptInput.value.trim();
 
-            if ((!messageText && !attachedFile) || !selectedModel || isAwaitingResponse) {
+            if ((!messageText && attachedFiles.length === 0) || !selectedModel || isAwaitingResponse) {
                 if (!selectedModel) alert("Please select a model or ensure API URL is correct.");
                 return;
             }
 
-            isAwaitingResponse = true; sendButton.disabled = true; userInput.disabled = true; attachFileButton.disabled = true;
+            isAwaitingResponse = true;
+            sendButton.disabled = true;
+            userInput.disabled = true;
+            fileManagementArea.classList.add('disabled-drop-zone');
 
-            displayMessage("User", messageText, false, attachedFile ? attachedFile.name : null);
+            displayMessage("User", messageText, false, attachedFiles.map(f => f.name));
             userInput.value = '';
 
             const aiMessageElements = displayMessage("AI", "<em>Typing...</em>", true);
@@ -728,24 +750,23 @@
 
             let userMessageForApi = messageText;
             const imagesForApi = [];
+            let textFileContentsForApi = "";
 
-            if (attachedFile) {
-                const safeFilename = escapeHTML(attachedFile.name); // Escape filename for API prompt too
-                if (attachedFile.type.startsWith('image/')) {
-                    imagesForApi.push(attachedFile.content.split(',')[1]);
-                    userMessageForApi = `User has attached an image named "${safeFilename}". Their typed message is: ${messageText || "(No typed message)"}`;
-                } else {
-                    userMessageForApi = `The user has provided the following text and also attached a file named "${safeFilename}". Please consider both for your response.
+            if (attachedFiles.length > 0) {
+                let filePreamble = "User has attached the following files:\n";
+                for (const file of attachedFiles) {
+                    const safeFilename = escapeHTML(file.name);
+                    filePreamble += `- "${safeFilename}" (${file.type})\n`; // Display original type
 
-Attached file content for "${safeFilename}":
-\`\`\`
-${attachedFile.content}
-\`\`\`
-
-User's typed message:
-${messageText}`;
+                    if (file.type.startsWith('image/')) {
+                        imagesForApi.push(file.content.split(',')[1]);
+                    } else { // Includes text files and PDF-extracted text
+                        textFileContentsForApi += `\n\nContent of "${safeFilename}":\n\`\`\`\n${file.content}\n\`\`\`\n`;
+                    }
                 }
+                userMessageForApi = `${filePreamble}${textFileContentsForApi}\nUser's typed message:\n${messageText || "(No typed message)"}`;
             }
+
 
             const messagesForApiPayload = [];
             if (systemPrompt) messagesForApiPayload.push({ role: "system", content: systemPrompt });
@@ -775,15 +796,12 @@ ${messageText}`;
                 }
 
                 let historyUserContent = messageText;
-                if (attachedFile) {
-                    const safeFilenameForHistory = escapeHTML(attachedFile.name);
-                    if (attachedFile.type.startsWith('image/')) {
-                        historyUserContent = `(Image: ${safeFilenameForHistory}) ${messageText}`;
-                    } else {
-                        historyUserContent = `(File: ${safeFilenameForHistory}) ${messageText}`;
-                    }
+                if (attachedFiles.length > 0) {
+                    const fileNamesForHistory = attachedFiles.map(f => escapeHTML(f.name)).join(', ');
+                    historyUserContent = `(Files: ${fileNamesForHistory}) ${messageText || ""}`.trim();
                 }
                 conversationHistory.push({ role: "user", content: historyUserContent });
+
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
@@ -818,20 +836,127 @@ ${messageText}`;
                 } else { displayMessage("AI", errorMessage); }
             } finally {
                 finalizeAiMessage();
-                clearAttachedFile();
+                clearAllAttachedFiles();
                 isAwaitingResponse = false;
                 sendButton.disabled = false;
                 userInput.disabled = false;
-                attachFileButton.disabled = false;
+                fileManagementArea.classList.remove('disabled-drop-zone');
                 userInput.focus();
             }
         }
 
-        function clearAttachedFile() {
-            attachedFile = null;
+        function renderAttachedFilesUI() {
+            selectedFilesContainer.innerHTML = '';
+            if (attachedFiles.length > 0) {
+                dropZoneInstruction.style.display = 'none';
+                selectedFilesContainer.style.display = 'block';
+                attachedFiles.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.classList.add('file-item');
+
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.textContent = file.name;
+                    fileNameSpan.title = file.name;
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.classList.add('remove-file-btn');
+                    removeBtn.innerHTML = '×';
+                    removeBtn.title = `Remove ${file.name}`;
+                    removeBtn.dataset.fileId = file.id;
+                    removeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        removeSpecificFile(file.id);
+                    };
+
+                    fileItem.appendChild(fileNameSpan);
+                    fileItem.appendChild(removeBtn);
+                    selectedFilesContainer.appendChild(fileItem);
+                });
+            } else {
+                dropZoneInstruction.style.display = 'block';
+                selectedFilesContainer.style.display = 'none';
+            }
+        }
+
+        async function extractTextFromPdf(arrayBuffer) {
+            if (typeof pdfjsLib === 'undefined') {
+                console.error("pdf.js is not loaded. Cannot parse PDF.");
+                return "[PDF.js library not loaded. Cannot extract text.]";
+            }
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n\n';
+                }
+                return fullText.trim();
+            } catch (error) {
+                console.error('Error parsing PDF:', error);
+                return `[Error extracting text from PDF: ${escapeHTML(error.message)}]`;
+            }
+        }
+
+        async function addFilesToList(files) {
+            for (const file of files) {
+                if (attachedFiles.some(f => f.name === file.name)) {
+                    alert(`File "${escapeHTML(file.name)}" is already attached.`);
+                    continue;
+                }
+                const fileId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+                const reader = new FileReader();
+
+                reader.onload = async (e) => {
+                    let fileContent = e.target.result;
+                    let fileType = file.type;
+
+                    if (fileType === 'application/pdf') {
+                        dropZoneInstruction.textContent = `Processing PDF: ${escapeHTML(file.name)}...`;
+                        fileContent = await extractTextFromPdf(e.target.result);
+                        dropZoneInstruction.textContent = 'Drag & Drop Files Here or Click to Upload';
+                    }
+
+                    attachedFiles.push({
+                        id: fileId,
+                        name: file.name,
+                        content: fileContent,
+                        type: fileType
+                    });
+                    renderAttachedFilesUI();
+                };
+
+                reader.onerror = (e) => {
+                    console.error("Error reading file:", file.name, e);
+                    alert("Error reading file: " + escapeHTML(file.name));
+                    dropZoneInstruction.textContent = 'Drag & Drop Files Here or Click to Upload';
+                };
+
+                if (file.type === 'application/pdf') {
+                    reader.readAsArrayBuffer(file);
+                } else if (file.type.startsWith('image/')) {
+                    reader.readAsDataURL(file);
+                } else if (file.type.startsWith('text/') || file.type === 'application/json' || file.type === 'application/xml' || !file.type) {
+                    reader.readAsText(file);
+                } else {
+                    alert(`File type "${escapeHTML(file.type)}" for "${escapeHTML(file.name)}" may not be optimally supported. It will be treated as text if possible.`);
+                    reader.readAsText(file);
+                }
+            }
             fileInputHidden.value = '';
-            fileInfoArea.style.display = 'none';
-            attachedFileNameSpan.textContent = '';
+        }
+
+        function removeSpecificFile(fileId) {
+            attachedFiles = attachedFiles.filter(f => f.id !== fileId);
+            renderAttachedFilesUI();
+            fileInputHidden.value = '';
+        }
+
+        function clearAllAttachedFiles() {
+            attachedFiles = [];
+            fileInputHidden.value = '';
+            renderAttachedFilesUI();
         }
 
         function resetChat() {
@@ -841,9 +966,13 @@ ${messageText}`;
                 currentAiMessageContentDiv.innerHTML = ''; currentAiMessageContentDiv.dataset.rawMarkdown = '';
             }
             finalizeAiMessage();
-            clearAttachedFile();
-            isAwaitingResponse = false; sendButton.disabled = false; userInput.disabled = false; attachFileButton.disabled = false;
-            userInput.focus(); console.log("Chat reset.");
+            clearAllAttachedFiles();
+            isAwaitingResponse = false;
+            sendButton.disabled = false;
+            userInput.disabled = false;
+            fileManagementArea.classList.remove('disabled-drop-zone');
+            userInput.focus();
+            console.log("Chat reset.");
         }
 
         function scrollToBottom() { chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight; }
@@ -873,46 +1002,56 @@ ${messageText}`;
             }
         });
 
-        attachFileButton.addEventListener('click', () => fileInputHidden.click());
-
-        fileInputHidden.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    attachedFile = {
-                        name: file.name,
-                        content: e.target.result,
-                        type: file.type
-                    };
-                    // Use escapeHTML when displaying filename in the UI
-                    attachedFileNameSpan.textContent = escapeHTML(file.name);
-                    fileInfoArea.style.display = 'flex';
-                };
-                reader.onerror = (e) => {
-                    console.error("Error reading file:", e);
-                    alert("Error reading file: " + escapeHTML(file.name)); // Escape here too
-                    clearAttachedFile();
-                };
-
-                if (file.type.startsWith('image/')) {
-                    reader.readAsDataURL(file);
-                } else if (file.type.startsWith('text/') || file.type === 'application/json' || file.type === 'application/xml' || !file.type) {
-                    reader.readAsText(file);
-                } else {
-                    alert(`File type "${escapeHTML(file.type)}" may not be optimally supported. It will be treated as text if possible, or ignored if binary.`);
-                    reader.readAsText(file);
-                }
+        fileManagementArea.addEventListener('click', () => {
+            if (!fileManagementArea.classList.contains('disabled-drop-zone')) {
+                fileInputHidden.click();
             }
         });
 
-        clearFileButton.addEventListener('click', clearAttachedFile);
+        fileInputHidden.addEventListener('change', (event) => {
+            if (event.target.files.length > 0) {
+                addFilesToList(event.target.files);
+            }
+        });
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileManagementArea.addEventListener(eventName, preventDefaults, false);
+        });
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileManagementArea.addEventListener(eventName, () => {
+                if (!fileManagementArea.classList.contains('disabled-drop-zone')) {
+                    fileManagementArea.classList.add('drag-over');
+                }
+            }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileManagementArea.addEventListener(eventName, () => {
+                if (!fileManagementArea.classList.contains('disabled-drop-zone')) {
+                    fileManagementArea.classList.remove('drag-over');
+                }
+            }, false);
+        });
+        fileManagementArea.addEventListener('drop', (event) => {
+            if (!fileManagementArea.classList.contains('disabled-drop-zone')) {
+                const dt = event.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    addFilesToList(files);
+                }
+            }
+        }, false);
+
 
         document.addEventListener('DOMContentLoaded', () => {
             ollamaUrlInput.value = OLLAMA_API_URL;
             fetchModels();
             userInput.focus();
             Prism.plugins.autoloader.languages_path = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/';
+            renderAttachedFilesUI();
         });
     </script>
 </body>
