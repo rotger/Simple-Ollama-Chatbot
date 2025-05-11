@@ -17,4 +17,5 @@ Support the following features:
 - Markdown
 - Mathjax
 - Code bloc synthax highlighting
-- Attaching files and images
+- Attaching files (including pdf)
+- Attaching images
