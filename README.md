@@ -17,4 +17,6 @@ Support the following features:
 - Markdown
 - Mathjax
 - Code bloc synthax highlighting
-- Attaching files
+- Attaching files (including pdf)
+- Attaching images
+- Scrape URL content found in the user input and send it to the model
