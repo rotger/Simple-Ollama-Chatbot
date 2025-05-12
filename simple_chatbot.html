@@ -26,7 +26,7 @@
             flex-direction: column;
             height: 95vh;
             width: 100%;
-            max-width: 800px;
+            max-width: 1200px;
             border: 1px solid #d0d7de;
             border-radius: 6px;
             box-shadow: 0 1px 0 rgba(27,31,36,0.04), 0 3px 6px rgba(27,31,36,0.1);
@@ -178,6 +178,17 @@
                 font-style: italic;
             }
 
+            .message-bubble .message-content small em,
+            .message-bubble .message-content small {
+                font-size: 0.85em;
+                color: #57606a;
+                display: block;
+                white-space: pre-wrap;
+                margin-top: 8px;
+                font-style: italic;
+            }
+
+
         .user-message {
             background-color: #EFF6FF;
             border-color: #C6DBEF;
@@ -243,7 +254,7 @@
 
             #file-management-area.drag-over {
                 background-color: #e8f0fe;
-                border-style: dashed;
+                border: 2px dashed #0366d6;
             }
 
             #file-management-area.disabled-drop-zone {
@@ -367,6 +378,36 @@
             #reset-chat-button:hover {
                 background-color: #a40e26;
             }
+
+        .scrape-url-controls {
+            padding: 0px 16px 10px 16px;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+            .scrape-url-controls label {
+                color: #57606a;
+                cursor: pointer;
+                user-select: none;
+                vertical-align: middle;
+            }
+
+            .scrape-url-controls input[type="checkbox"] {
+                vertical-align: middle;
+                margin-top: 0;
+            }
+
+        #scrape-status {
+            font-size: 12px;
+            margin-left: 10px;
+            color: #0366d6;
+            flex-grow: 1;
+            text-align: right;
+        }
+
 
         .message-content pre {
             background-color: #f6f8fa;
@@ -495,6 +536,11 @@
             <button id="send-button">Send</button>
             <button id="reset-chat-button">Reset Chat</button>
         </div>
+        <div class="scrape-url-controls">
+            <input type="checkbox" id="scrape-url-checkbox" name="scrape-url-checkbox">
+            <label for="scrape-url-checkbox">Scrape URL content</label>
+            <span id="scrape-status"></span>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -511,7 +557,6 @@
     </script>
     <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-    <!-- PDF.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
         if (typeof pdfjsLib !== 'undefined') {
@@ -539,6 +584,10 @@
         const fileInputHidden = document.getElementById('file-input-hidden');
         const selectedFilesContainer = document.getElementById('selected-files-container');
         const dropZoneInstruction = document.getElementById('drop-zone-instruction');
+
+        const scrapeUrlCheckbox = document.getElementById('scrape-url-checkbox');
+        const scrapeStatusElement = document.getElementById('scrape-status');
+
 
         let conversationHistory = [];
         let isAwaitingResponse = false;
@@ -599,7 +648,7 @@
             });
         }
 
-        function displayMessage(sender, textContent, isStreaming = false, attachedFilenamesArray = null) {
+        function displayMessage(sender, mainText, scrapedText = null, isStreaming = false, attachedFilenamesArray = null) {
             const messageBubble = document.createElement('div');
             messageBubble.classList.add('message-bubble', sender.toLowerCase() + '-message');
 
@@ -623,8 +672,9 @@
                 contentDiv.innerHTML = "<em>Typing...</em>";
                 currentAiMessageElement = messageBubble;
                 currentAiMessageContentDiv = contentDiv;
+                if (scrapeStatusElement) scrapeStatusElement.textContent = "";
             } else {
-                contentDiv.innerHTML = marked.parse(textContent);
+                contentDiv.innerHTML = marked.parse(mainText);
                 Prism.highlightAllUnder(contentDiv);
                 if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
                     MathJax.typesetPromise([contentDiv])
@@ -632,6 +682,17 @@
                 }
             }
             messageBubble.appendChild(contentDiv);
+
+            if (sender === 'User' && scrapedText && scrapedText.trim() !== "") {
+                const scrapedInfoContainer = document.createElement('div');
+                scrapedInfoContainer.classList.add('message-content');
+                const smallElement = document.createElement('small');
+                smallElement.innerHTML = marked.parse(scrapedText.trim());
+                Prism.highlightAllUnder(smallElement);
+                scrapedInfoContainer.appendChild(smallElement);
+                messageBubble.appendChild(scrapedInfoContainer);
+            }
+
 
             const timestampDiv = document.createElement('div');
             timestampDiv.classList.add('message-timestamp');
@@ -659,14 +720,14 @@
             thinkBlocks.forEach(block => {
                 const placeholder = `${THINK_TAG_PLACEHOLDER_PREFIX}${block.id}${THINK_TAG_PLACEHOLDER_SUFFIX}`;
                 const thinkSectionHtml = `
-                                    <div class="collapsible-think-section">
-                                        <div class="think-header" data-think-block-id="${block.id}">
-                                            <span>AI Thoughts</span> <span class="toggle-icon">[+]</span>
-                                        </div>
-                                        <div class="think-content" id="think-content-${block.id}" style="display:none;">
-                                            ${marked.parse(block.rawContent)}
-                                        </div>
-                                    </div>`;
+                                <div class="collapsible-think-section">
+                                    <div class="think-header" data-think-block-id="${block.id}">
+                                        <span>AI Thoughts</span> <span class="toggle-icon">[+]</span>
+                                    </div>
+                                    <div class="think-content" id="think-content-${block.id}" style="display:none;">
+                                        ${marked.parse(block.rawContent)}
+                                    </div>
+                                </div>`;
                 const placeholderRegExp = new RegExp(RegExp.escape(placeholder), 'g');
                 html = html.replace(placeholderRegExp, thinkSectionHtml);
             });
@@ -726,13 +787,71 @@
             currentAiMessageElement = null; currentAiMessageContentDiv = null; scrollToBottom();
         }
 
+        function extractUrls(text) {
+            if (!text) return [];
+            const urlRegex = /\bhttps?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+            const urls = text.match(urlRegex);
+            return urls ? Array.from(new Set(urls)) : [];
+        }
+
         async function sendMessage() {
             const messageText = userInput.value.trim();
             const selectedModel = modelSelect.value;
             const systemPrompt = systemPromptInput.value.trim();
+            const shouldScrapeUrls = scrapeUrlCheckbox.checked;
 
-            if ((!messageText && attachedFiles.length === 0) || !selectedModel || isAwaitingResponse) {
+            let scrapedUrlContentForApi = "";
+            let scrapedPreambleForUserDisplay = "";
+
+            if (shouldScrapeUrls && messageText) {
+                const urls = extractUrls(messageText);
+                if (urls.length > 0) {
+                    scrapeStatusElement.textContent = "Scraping URLs...";
+                    sendButton.disabled = true;
+
+                    let scrapedCount = 0;
+                    let failedScrapes = 0;
+
+                    for (const url of urls) {
+                        scrapeStatusElement.textContent = `Scraping: ${url.substring(0, 50)}...`;
+                        try {
+                            const proxyFetchUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                            const response = await fetch(proxyFetchUrl, {
+                                headers: { 'Accept': 'text/html,text/plain' }
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`Failed to fetch (proxy): ${response.status} ${response.statusText}`);
+                            }
+                            const contentType = response.headers.get("content-type");
+                            if (contentType && (contentType.includes("text/html") || contentType.includes("text/plain") || contentType.includes("application/xml") || contentType.includes("application/json"))) {
+                                const htmlContent = await response.text();
+                                scrapedUrlContentForApi += `\n\nContent from ${escapeHTML(url)}:\n\`\`\`html\n${htmlContent}\n\`\`\`\n`;
+                                scrapedPreambleForUserDisplay += `Successfully scraped: \`${escapeHTML(url)}\``;
+                                scrapedCount++;
+                            } else {
+                                scrapedPreambleForUserDisplay += `Skipped (not text/HTML): \`${escapeHTML(url)}\` (Type: ${contentType || 'unknown'})`;
+                                failedScrapes++;
+                            }
+                        } catch (error) {
+                            console.warn(`Error scraping URL ${url}:`, error);
+                            scrapedPreambleForUserDisplay += `Failed to scrape: \`${escapeHTML(url)}\` (Error: ${escapeHTML(error.message)})`;
+                            failedScrapes++;
+                        }
+                    }
+                    scrapeStatusElement.textContent = `Scraping: ${scrapedCount} ok, ${failedScrapes} failed/skipped.`;
+                    if (!isAwaitingResponse) sendButton.disabled = false;
+                }
+            }
+
+
+            if ((!messageText && attachedFiles.length === 0 && !scrapedUrlContentForApi) || !selectedModel || isAwaitingResponse) {
                 if (!selectedModel) alert("Please select a model or ensure API URL is correct.");
+                if (isAwaitingResponse) console.log("Already awaiting response.");
+                if (!messageText && !attachedFiles.length && scrapeUrlCheckbox.checked && !scrapedUrlContentForApi) {
+                    scrapeStatusElement.textContent = "No message, files, or usable scraped content to send.";
+                    return;
+                }
                 return;
             }
 
@@ -741,37 +860,62 @@
             userInput.disabled = true;
             fileManagementArea.classList.add('disabled-drop-zone');
 
-            displayMessage("User", messageText, false, attachedFiles.map(f => f.name));
+            displayMessage("User", messageText, scrapedPreambleForUserDisplay, false, attachedFiles.map(f => f.name));
             userInput.value = '';
 
-            const aiMessageElements = displayMessage("AI", "<em>Typing...</em>", true);
+            const aiMessageElements = displayMessage("AI", "<em>Typing...</em>", null, true);
             currentAiMessageContentDiv = aiMessageElements.contentDiv;
             currentAiMessageContentDiv.dataset.rawMarkdown = "";
 
-            let userMessageForApi = messageText;
+            let userMessageForApi = "";
+
+            if (scrapedUrlContentForApi) {
+                userMessageForApi += scrapedUrlContentForApi;
+            }
+
+            if (messageText) {
+                userMessageForApi += `\n\nUser's typed message:\n${messageText}\n`;
+            } else if (scrapedUrlContentForApi && !messageText) {
+                userMessageForApi += `\n\nUser's typed message:\n(No typed message, content above was scraped from URLs in original prompt)\n`;
+            }
+
+
             const imagesForApi = [];
+            let filePreambleForApi = "";
             let textFileContentsForApi = "";
 
             if (attachedFiles.length > 0) {
-                let filePreamble = "User has attached the following files:\n";
+                filePreambleForApi = "User has also attached the following files:\n";
                 for (const file of attachedFiles) {
                     const safeFilename = escapeHTML(file.name);
-                    filePreamble += `- "${safeFilename}" (${file.type})\n`; // Display original type
+                    filePreambleForApi += `- "${safeFilename}" (${file.type})\n`;
 
                     if (file.type.startsWith('image/')) {
                         imagesForApi.push(file.content.split(',')[1]);
-                    } else { // Includes text files and PDF-extracted text
+                    } else {
                         textFileContentsForApi += `\n\nContent of "${safeFilename}":\n\`\`\`\n${file.content}\n\`\`\`\n`;
                     }
                 }
-                userMessageForApi = `${filePreamble}${textFileContentsForApi}\nUser's typed message:\n${messageText || "(No typed message)"}`;
+                userMessageForApi += `\n\n${filePreambleForApi}${textFileContentsForApi}`;
+            }
+
+            if (!userMessageForApi.trim() && imagesForApi.length === 0) {
+                console.log("Attempted to send an empty message after processing.");
+                isAwaitingResponse = false;
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                fileManagementArea.classList.remove('disabled-drop-zone');
+                scrapeStatusElement.textContent = "Nothing to send.";
+                finalizeAiMessage();
+                currentAiMessageContentDiv.innerHTML = marked.parse("**Error:** Tried to send an empty message.");
+                return;
             }
 
 
             const messagesForApiPayload = [];
             if (systemPrompt) messagesForApiPayload.push({ role: "system", content: systemPrompt });
             messagesForApiPayload.push(...conversationHistory);
-            const currentUserMessagePayload = { role: "user", content: userMessageForApi };
+            const currentUserMessagePayload = { role: "user", content: userMessageForApi.trim() };
             if (imagesForApi.length > 0) {
                 currentUserMessagePayload.images = imagesForApi;
             }
@@ -796,9 +940,13 @@
                 }
 
                 let historyUserContent = messageText;
+                if (scrapedPreambleForUserDisplay && scrapedPreambleForUserDisplay.trim() !== "") {
+                    historyUserContent += `\n${scrapedPreambleForUserDisplay}`;
+                }
+
                 if (attachedFiles.length > 0) {
                     const fileNamesForHistory = attachedFiles.map(f => escapeHTML(f.name)).join(', ');
-                    historyUserContent = `(Files: ${fileNamesForHistory}) ${messageText || ""}`.trim();
+                    historyUserContent = `(Files: ${fileNamesForHistory}) ${historyUserContent || ""}`.trim();
                 }
                 conversationHistory.push({ role: "user", content: historyUserContent });
 
@@ -828,12 +976,13 @@
                 conversationHistory.push({ role: "assistant", content: aiResponseContent });
             } catch (error) {
                 console.error("Error sending message:", error);
-                const errorMessage = `**Error:** ${error.message || "An unknown error occurred."}`;
+                const errorMessage = `**Error:** ${escapeHTML(error.message) || "An unknown error occurred."}`;
                 if (currentAiMessageContentDiv) {
                     currentAiMessageContentDiv.innerHTML = marked.parse(errorMessage);
                     Prism.highlightAllUnder(currentAiMessageContentDiv);
                     currentAiMessageContentDiv.dataset.rawMarkdown = errorMessage;
-                } else { displayMessage("AI", errorMessage); }
+                } else { displayMessage("AI", errorMessage, null); }
+                if (scrapeStatusElement) scrapeStatusElement.textContent = "Error during send.";
             } finally {
                 finalizeAiMessage();
                 clearAllAttachedFiles();
@@ -940,7 +1089,8 @@
                 } else if (file.type.startsWith('text/') || file.type === 'application/json' || file.type === 'application/xml' || !file.type) {
                     reader.readAsText(file);
                 } else {
-                    alert(`File type "${escapeHTML(file.type)}" for "${escapeHTML(file.name)}" may not be optimally supported. It will be treated as text if possible.`);
+                    console.warn(`File type "${escapeHTML(file.type)}" for "${escapeHTML(file.name)}" may not be optimally supported. It will be treated as text if possible.`);
+                    alert(`File type "${escapeHTML(file.type)}" for "${escapeHTML(file.name)}" may not be optimally supported. It will be treated as text if possible, but might result in garbled content for the LLM.`);
                     reader.readAsText(file);
                 }
             }
@@ -971,6 +1121,7 @@
             sendButton.disabled = false;
             userInput.disabled = false;
             fileManagementArea.classList.remove('disabled-drop-zone');
+            if (scrapeStatusElement) scrapeStatusElement.textContent = "";
             userInput.focus();
             console.log("Chat reset.");
         }
