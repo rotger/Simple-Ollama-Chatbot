@@ -316,7 +316,7 @@
 
         .chat-input-area {
             display: flex;
-            padding: 16px;
+            padding: 16px 16px 0px 16px;
             background-color: #ffffff;
             gap: 8px;
             align-items: flex-start;
@@ -395,6 +395,19 @@
             line-height: 20px;
             flex-shrink: 0;
         }
+
+        .button-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Adjust space between buttons as needed */
+            flex-shrink: 0; /* Prevent the button column from shrinking */
+        }
+
+            /* Optional: If you want the buttons to have the same width in the stack */
+            .button-stack button {
+                width: 100%; /* Makes both buttons fill the width of the column */
+                box-sizing: border-box; /* Ensure padding/border are included in width */
+            }
 
         #send-button {
             background-color: #2da44e;
@@ -576,10 +589,12 @@
         <div class="chat-input-area">
             <div class="textarea-wrapper">
                 <div id="user-input-highlighter"></div>
-                <textarea id="user-input" placeholder="Type your message (Shift+Enter for new line)..." rows="1"></textarea>
+                <textarea id="user-input" placeholder="Type your message (Shift+Enter for new line)..." rows="5"></textarea>
             </div>
-            <button id="send-button">Send</button>
-            <button id="reset-chat-button">Reset Chat</button>
+            <div class="button-stack">
+                <button id="send-button">Send</button>
+                <button id="reset-chat-button">Reset Chat</button>
+            </div>
         </div>
         <div class="scrape-url-controls">
             <input type="checkbox" id="scrape-url-checkbox" name="scrape-url-checkbox">
