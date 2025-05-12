@@ -322,37 +322,79 @@
             align-items: flex-start;
         }
 
-            .chat-input-area textarea {
-                flex-grow: 1;
-                resize: none;
-                border-radius: 6px;
-                padding: 8px 12px;
-                border: 1px solid #d0d7de;
-                font-family: inherit;
-                font-size: 14px;
-                line-height: 20px;
-                box-shadow: inset 0 1px 0 rgba(27,31,36,0.075);
-                min-height: 38px;
+        .textarea-wrapper { /* New wrapper for textarea and highlighter */
+            position: relative;
+            flex-grow: 1;
+            font-family: inherit; /* Ensure font propagates */
+            font-size: 14px;
+            line-height: 20px;
+        }
+
+        #user-input-highlighter {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 8px 12px; /* Match textarea */
+            border: 1px solid transparent; /* Match textarea border for layout */
+            border-radius: 6px; /* Match textarea */
+            box-sizing: border-box;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow: hidden; /* Match textarea scroll behavior */
+            pointer-events: none; /* Click through */
+            z-index: 0;
+            color: transparent; /* Base text is transparent, spans provide visual */
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        .highlighted-url {
+            background-color: rgba(173, 216, 230, 0.4);
+            border-radius: 3px;
+        }
+
+
+        .chat-input-area textarea {
+            /* flex-grow: 1; -- Handled by wrapper */
+            width: 100%; /* Fill wrapper */
+            /* height: 100%; -- Let min-height and content define height */
+            resize: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            border: 1px solid #d0d7de;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 20px;
+            box-shadow: inset 0 1px 0 rgba(27,31,36,0.075);
+            min-height: 38px; /* This is key for sizing */
+            box-sizing: border-box; /* Ensure padding/border are included in width/height */
+            /* For highlighter */
+            position: relative;
+            z-index: 1;
+            background-color: transparent !important; /* Crucial for highlighter visibility */
+        }
+
+            .chat-input-area textarea:focus {
+                border-color: #0969da;
+                outline: none;
+                box-shadow: inset 0 1px 0 rgba(27,31,36,0.075), 0 0 0 3px rgba(9,105,218,0.3);
             }
 
-                .chat-input-area textarea:focus {
-                    border-color: #0969da;
-                    outline: none;
-                    box-shadow: inset 0 1px 0 rgba(27,31,36,0.075), 0 0 0 3px rgba(9,105,218,0.3);
-                }
-
-            .chat-input-area button {
-                border-radius: 6px;
-                padding: 8px 16px;
-                border: 1px solid rgba(27,31,36,0.15);
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 600;
-                transition: background-color 0.1s ease-in-out;
-                height: 38px;
-                line-height: 20px;
-                flex-shrink: 0;
-            }
+        .chat-input-area button {
+            border-radius: 6px;
+            padding: 8px 16px;
+            border: 1px solid rgba(27,31,36,0.15);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.1s ease-in-out;
+            height: 38px;
+            line-height: 20px;
+            flex-shrink: 0;
+        }
 
         #send-button {
             background-color: #2da44e;
@@ -532,7 +574,10 @@
         </div>
 
         <div class="chat-input-area">
-            <textarea id="user-input" placeholder="Type your message (Shift+Enter for new line)..." rows="1"></textarea>
+            <div class="textarea-wrapper">
+                <div id="user-input-highlighter"></div>
+                <textarea id="user-input" placeholder="Type your message (Shift+Enter for new line)..." rows="1"></textarea>
+            </div>
             <button id="send-button">Send</button>
             <button id="reset-chat-button">Reset Chat</button>
         </div>
@@ -587,6 +632,7 @@
 
         const scrapeUrlCheckbox = document.getElementById('scrape-url-checkbox');
         const scrapeStatusElement = document.getElementById('scrape-status');
+        const userInputHighlighter = document.getElementById('user-input-highlighter');
 
 
         let conversationHistory = [];
@@ -594,6 +640,7 @@
         let currentAiMessageElement = null;
         let currentAiMessageContentDiv = null;
         let attachedFiles = [];
+        let userScrolledUp = false; // For conditional autoscroll
 
         const THINK_TAG_PLACEHOLDER_PREFIX = "%%THINK_BLOCK_ID_";
         const THINK_TAG_PLACEHOLDER_SUFFIX = "%%";
@@ -603,10 +650,10 @@
                 if (Prism.languages[lang]) {
                     return Prism.highlight(code, Prism.languages[lang], lang);
                 } else if (lang) {
-                    Prism.plugins.autoloader.loadLanguages(lang, () => { });
-                    return code;
+                    Prism.plugins.autoloader.loadLanguages(lang, () => { }); // Auto-load
+                    return code; // Return unhighlighted code initially, Prism will highlight async
                 }
-                return Prism.highlight(code, Prism.languages.markup, 'markup');
+                return Prism.highlight(code, Prism.languages.markup, 'markup'); // Default
             },
             gfm: true, breaks: true, pedantic: false, smartLists: true, smartypants: false, headerIds: false, mangle: false
         });
@@ -615,13 +662,19 @@
             if (!str) return '';
             return str.replace(/[&<>'"]/g,
                 tag => ({
-                    '&': '&',
+                    '&': '&', // Corrected: '&' should be '&'
                     '<': '<',
                     '>': '>',
                     "'": '\'',
                     '"': '"'
                 }[tag] || tag)
             );
+        }
+
+        if (!RegExp.escape) {
+            RegExp.escape = function (s) {
+                return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            };
         }
 
         async function fetchModels() {
@@ -720,21 +773,20 @@
             thinkBlocks.forEach(block => {
                 const placeholder = `${THINK_TAG_PLACEHOLDER_PREFIX}${block.id}${THINK_TAG_PLACEHOLDER_SUFFIX}`;
                 const thinkSectionHtml = `
-                                <div class="collapsible-think-section">
-                                    <div class="think-header" data-think-block-id="${block.id}">
-                                        <span>AI Thoughts</span> <span class="toggle-icon">[+]</span>
-                                    </div>
-                                    <div class="think-content" id="think-content-${block.id}" style="display:none;">
-                                        ${marked.parse(block.rawContent)}
-                                    </div>
-                                </div>`;
+                                        <div class="collapsible-think-section">
+                                            <div class="think-header" data-think-block-id="${block.id}">
+                                                <span>AI Thoughts</span> <span class="toggle-icon">[+]</span>
+                                            </div>
+                                            <div class="think-content" id="think-content-${block.id}" style="display:none;">
+                                                ${marked.parse(block.rawContent)}
+                                            </div>
+                                        </div>`;
                 const placeholderRegExp = new RegExp(RegExp.escape(placeholder), 'g');
                 html = html.replace(placeholderRegExp, thinkSectionHtml);
             });
             contentDiv.innerHTML = html;
         }
 
-        if (!RegExp.escape) { RegExp.escape = function (s) { return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); }; }
 
         function addThinkBlockListeners(parentElement) {
             parentElement.querySelectorAll('.think-header').forEach(header => {
@@ -784,7 +836,9 @@
                     MathJax.typesetPromise([currentAiMessageContentDiv]).catch(err => console.warn("MathJax (final):", err));
                 }
             }
-            currentAiMessageElement = null; currentAiMessageContentDiv = null; scrollToBottom();
+            currentAiMessageElement = null; currentAiMessageContentDiv = null;
+            userScrolledUp = false; // Reset scroll lock when message is done
+            scrollToBottom(); // Ensure it's at bottom if not locked by prior user scroll
         }
 
         function extractUrls(text) {
@@ -795,6 +849,7 @@
         }
 
         async function sendMessage() {
+            userScrolledUp = false; // Reset user scroll lock for new message sequence
             const messageText = userInput.value.trim();
             const selectedModel = modelSelect.value;
             const systemPrompt = systemPromptInput.value.trim();
@@ -826,7 +881,7 @@
                             const contentType = response.headers.get("content-type");
                             if (contentType && (contentType.includes("text/html") || contentType.includes("text/plain") || contentType.includes("application/xml") || contentType.includes("application/json"))) {
                                 const htmlContent = await response.text();
-                                scrapedUrlContentForApi += `\n\nContent from ${escapeHTML(url)}:\n\`\`\`html\n${htmlContent}\n\`\`\`\n`;
+                                scrapedUrlContentForApi += `\n\nContent from ${escapeHTML(url)}:\n\`\`\`html\n${escapeHTML(htmlContent)}\n\`\`\`\n`; // Escape HTML content
                                 scrapedPreambleForUserDisplay += `Successfully scraped: \`${escapeHTML(url)}\``;
                                 scrapedCount++;
                             } else {
@@ -841,6 +896,7 @@
                     }
                     scrapeStatusElement.textContent = `Scraping: ${scrapedCount} ok, ${failedScrapes} failed/skipped.`;
                     if (!isAwaitingResponse) sendButton.disabled = false;
+                    scrapedPreambleForUserDisplay = scrapedPreambleForUserDisplay.trim();
                 }
             }
 
@@ -862,6 +918,8 @@
 
             displayMessage("User", messageText, scrapedPreambleForUserDisplay, false, attachedFiles.map(f => f.name));
             userInput.value = '';
+            updateInputHighlighting(); // Clear highlights after sending
+
 
             const aiMessageElements = displayMessage("AI", "<em>Typing...</em>", null, true);
             currentAiMessageContentDiv = aiMessageElements.contentDiv;
@@ -906,8 +964,8 @@
                 userInput.disabled = false;
                 fileManagementArea.classList.remove('disabled-drop-zone');
                 scrapeStatusElement.textContent = "Nothing to send.";
-                finalizeAiMessage();
-                currentAiMessageContentDiv.innerHTML = marked.parse("**Error:** Tried to send an empty message.");
+                finalizeAiMessage(); // Important to call this
+                if (currentAiMessageContentDiv) currentAiMessageContentDiv.innerHTML = marked.parse("**Error:** Tried to send an empty message.");
                 return;
             }
 
@@ -941,7 +999,8 @@
 
                 let historyUserContent = messageText;
                 if (scrapedPreambleForUserDisplay && scrapedPreambleForUserDisplay.trim() !== "") {
-                    historyUserContent += `\n${scrapedPreambleForUserDisplay}`;
+                    // Use markdown for the scraped preamble in history for better readability if reviewed.
+                    historyUserContent += `\n\n<small><em>Scraped URLs info:\n${scrapedPreambleForUserDisplay.replace(/\n/g, "\n<br>")}</em></small>`;
                 }
 
                 if (attachedFiles.length > 0) {
@@ -1115,24 +1174,91 @@
             if (currentAiMessageContentDiv) {
                 currentAiMessageContentDiv.innerHTML = ''; currentAiMessageContentDiv.dataset.rawMarkdown = '';
             }
-            finalizeAiMessage();
+            finalizeAiMessage(); // Also resets userScrolledUp
             clearAllAttachedFiles();
             isAwaitingResponse = false;
             sendButton.disabled = false;
             userInput.disabled = false;
+            userInput.value = ''; // Clear input field on reset
+            updateInputHighlighting(); // Update highlighter for cleared input
             fileManagementArea.classList.remove('disabled-drop-zone');
             if (scrapeStatusElement) scrapeStatusElement.textContent = "";
+            userScrolledUp = false; // Explicitly reset here too
             userInput.focus();
             console.log("Chat reset.");
         }
 
-        function scrollToBottom() { chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight; }
+        function scrollToBottom() {
+            const isAtBottom = chatMessagesArea.scrollHeight - chatMessagesArea.scrollTop <= chatMessagesArea.clientHeight + 2; // +2 for tolerance
+            if (!userScrolledUp || isAtBottom) {
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+                if (isAtBottom) userScrolledUp = false; // If we auto-scrolled to bottom, reset the lock
+            }
+        }
+
+        // Autoscroll control
+        chatMessagesArea.addEventListener('scroll', () => {
+            // Only consider user scroll intervention if AI is actively responding (streaming)
+            if (isAwaitingResponse && currentAiMessageContentDiv) {
+                const isNearBottom = chatMessagesArea.scrollHeight - chatMessagesArea.scrollTop <= chatMessagesArea.clientHeight + 5; // একটু বেশি সহনশীলতা
+                if (!isNearBottom) {
+                    userScrolledUp = true; // User has scrolled away from the bottom
+                } else {
+                    // If user scrolls back to the very bottom, re-enable autoscroll
+                    userScrolledUp = false;
+                }
+            }
+        });
+
+        // URL Highlighting in input
+        function updateInputHighlighting() {
+            if (!userInputHighlighter) return;
+
+            if (!scrapeUrlCheckbox.checked) {
+                userInputHighlighter.innerHTML = '';
+                return;
+            }
+
+            const text = userInput.value;
+            if (!text) {
+                userInputHighlighter.innerHTML = '';
+                return;
+            }
+
+            let highlightedText = escapeHTML(text);
+            const urls = extractUrls(text); // Use original text for URL extraction
+
+            urls.sort((a, b) => b.length - a.length); // Sort to handle nested URLs correctly
+
+            for (const url of urls) {
+                const escapedUrl = escapeHTML(url);
+                highlightedText = highlightedText.replace(
+                    new RegExp(RegExp.escape(escapedUrl), 'g'),
+                    `<span class="highlighted-url">${escapedUrl}</span>`
+                );
+            }
+            userInputHighlighter.innerHTML = highlightedText;
+
+            // Synchronize scroll position of highlighter with textarea
+            userInputHighlighter.scrollTop = userInput.scrollTop;
+            userInputHighlighter.scrollLeft = userInput.scrollLeft;
+        }
+
 
         sendButton.addEventListener('click', sendMessage);
         resetChatButton.addEventListener('click', resetChat);
         userInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }
         });
+        userInput.addEventListener('input', updateInputHighlighting);
+        userInput.addEventListener('scroll', () => { // Sync scroll for textarea scrollbar usage
+            if (userInputHighlighter) {
+                userInputHighlighter.scrollTop = userInput.scrollTop;
+                userInputHighlighter.scrollLeft = userInput.scrollLeft;
+            }
+        });
+        scrapeUrlCheckbox.addEventListener('change', updateInputHighlighting);
+
 
         systemPromptToggle.addEventListener('click', () => {
             const isHidden = systemPromptContent.style.display === 'none';
@@ -1203,6 +1329,7 @@
             userInput.focus();
             Prism.plugins.autoloader.languages_path = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/';
             renderAttachedFilesUI();
+            updateInputHighlighting(); // Initial call in case checkbox is pre-checked
         });
     </script>
 </body>
