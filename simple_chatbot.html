@@ -453,6 +453,7 @@
             .scrape-url-controls input[type="checkbox"] {
                 vertical-align: middle;
                 margin-top: 0;
+                margin-top: 3px;
             }
 
         #scrape-status {
@@ -1015,7 +1016,7 @@
                 let historyUserContent = messageText;
                 if (scrapedPreambleForUserDisplay && scrapedPreambleForUserDisplay.trim() !== "") {
                     // Use markdown for the scraped preamble in history for better readability if reviewed.
-                    historyUserContent += `\n\n<small><em>Scraped URLs info:\n${scrapedPreambleForUserDisplay.replace(/\n/g, "\n<br>")}</em></small>`;
+                    historyUserContent += `\n\n<small><em>Scraped URLs info:\n${scrapedPreambleForUserDisplay.replace(/\n/g, "<br>")}</em></small>`;
                 }
 
                 if (attachedFiles.length > 0) {
