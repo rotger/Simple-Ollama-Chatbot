@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ollama Standalone Chat</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link id="prism-link" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         body {
@@ -105,6 +105,27 @@
         }
 
             #update-ollama-url-button:hover {
+                background-color: #f3f4f6;
+                border-color: rgba(27,31,36,0.25);
+            }
+
+        #theme-toggle-button {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            font-size: 1.5em;
+            line-height: 38px;
+            text-align: center;
+            color: #24292f;
+            background-color: #f6f8fa;
+            border: 1px solid rgba(27,31,36,0.15);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.1s ease-in-out, border-color 0.1s ease-in-out;
+        }
+
+            #theme-toggle-button:hover {
                 background-color: #f3f4f6;
                 border-color: rgba(27,31,36,0.25);
             }
@@ -601,9 +622,276 @@
             display: block !important; /* Ensure block display for scroll */
             margin: 1em 0 !important; /* Consistent margin */
         }
+
+        /* ----- Dark Theme ----- */
+        .dark-theme {
+            background-color: #1e1e1e; /* Dark background */
+            color: #fff; /* White text */
+        }
+
+        .dark-theme .chat-container {
+            border-color: #333; /* Darker border */
+            background-color: #282828; /* Slightly lighter dark background */
+        }
+
+        .dark-theme .scrape-url-controls {
+            padding: 8px 16px 10px 16px; /* Adjusted padding */
+            background-color: #1e1e1e; /* Dark background - a very common dark theme base */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            border-top: 1px solid #333; /* Slightly lighter border for dark backgrounds */
+        }
+
+            .dark-theme .scrape-url-controls label {
+                color: #b3c2d1; /* Lighter text color for labels */
+                cursor: pointer;
+                user-select: none;
+                vertical-align: middle;
+            }
+
+            .dark-theme .scrape-url-controls input[type="checkbox"] {
+                vertical-align: middle;
+                margin-top: 0; /* Reset potential browser default margin */
+                margin-right: 4px; /* Space before label */
+            }
+
+        .dark-theme #scrape-status {
+            font-size: 12px;
+            margin-left: 10px;
+            color: #0366d6; /* Blue for status - often retains the same color */
+            flex-grow: 1;
+            text-align: right;
+            min-height: 1.2em; /* Prevent layout shift when empty */
+        }        
+
+        .dark-theme .header-section {
+            background-color: #333;
+        }
+
+        .dark-theme .header-section label:not(.collapsible-header-label) {
+            color: #fff;
+        }
+
+        .dark-theme .header-section select,
+        .dark-theme .header-section textarea,
+        .dark-theme .header-section input[type="text"] {
+            border-color: #555;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .header-section select:focus,
+        .dark-theme .header-section textarea:focus,
+        .dark-theme .header-section input[type="text"]:focus {
+            border-color: #0969da;
+            outline: none;
+            box-shadow: inset 0 1px 0 rgba(27,31,36,0.075), 0 0 0 3px rgba(9,105,218,0.3);
+        }
+
+        .dark-theme .model-selector label {
+            color: #fff;
+        }
+
+        .dark-theme .model-selector select,
+        .dark-theme .model-selector input[type="text"] {
+            border-color: #555;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme #update-ollama-url-button,
+        .dark-theme #theme-toggle-button {
+            background-color: #333;
+            border-color: #555;
+            color: #fff;
+        }
+
+        .dark-theme #update-ollama-url-button:hover,
+        .dark-theme #theme-toggle-button:hover {
+            background-color: #444;
+            border-color: #666;
+        }
+
+        .dark-theme .system-prompt-area textarea {
+            border-color: #555;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .collapsible-header {
+            color: #fff;
+        }
+
+        .dark-theme .collapsible-header:hover {
+            color: #0969da;
+        }
+
+        .dark-theme .toggle-icon {
+            color: #888;
+        }
+
+        .dark-theme .chat-messages {
+            border-top: 1px solid #333;
+        }
+
+        .dark-theme .message-bubble {
+            border-color: #333;
+        }
+
+        .dark-theme .message-bubble .message-sender {
+            color: #888;
+        }
+
+        .dark-theme .message-bubble .message-timestamp {
+            color: #888;
+        }
+
+        .dark-theme .message-bubble .message-content pre {
+            background-color: #333;
+            color: #eee;
+        }
+
+        .dark-theme .user-message {
+            background-color: #3f3f3f; /* Slightly darker */
+            border-color: #444; /* Darker border */
+            color: #fff;
+        }
+
+        .dark-theme .ai-message {
+            background-color: #282828;
+            border-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .ai-message em {
+            color: #888;
+        }
+
+        .dark-theme .collapsible-think-section {
+            border-color: #444;
+            background-color: #282828;
+        }
+
+        .dark-theme .collapsible-think-section .think-header {
+            background-color: #444;
+            color: #fff;
+            border-bottom-color: #555;
+        }
+
+        .dark-theme .collapsible-think-section .think-header:hover {
+            background-color: #555;
+        }
+
+        .dark-theme .collapsible-think-section .think-content {
+            background-color: #333;
+        }
+
+        .dark-theme #file-management-area {
+            background-color: #333;
+            border-color: #555;
+            color: #fff;
+        }
+
+        .dark-theme #file-management-area.drag-over {
+            background-color: #444;
+            border-color: #666;
+        }
+
+        .dark-theme #file-management-area.disabled-drop-zone {
+            opacity: 1; /* Restore visibility */
+            color: #888;
+        }
+
+        .dark-theme #drop-zone-instruction {
+            color: #888;
+        }
+
+        .dark-theme #selected-files-container {
+            border-color: #555;
+        }
+
+        .dark-theme .file-item {
+            border-color: #555;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .remove-file-btn {
+            color: #cf222e;
+        }
+
+        .dark-theme .remove-file-btn:hover {
+            color: white;
+            background-color: #cf222e;
+        }
+
+        .dark-theme .chat-input-area {
+            background-color: #333;
+        }
+
+        .dark-theme .chat-input-area textarea {
+            border-color: #555;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .chat-input-area textarea:focus {
+            border-color: #0969da;
+            outline: none;
+            box-shadow: inset 0 1px 0 rgba(27,31,36,0.075), 0 0 0 3px rgba(9,105,218,0.3);
+        }
+
+        .dark-theme .chat-input-area button {
+            border-color: #555;
+            color: #fff;
+            background-color: #333;
+        }
+
+        .dark-theme #send-button {
+            background-color: #2da44e;
+            color: white;
+        }
+
+        .dark-theme #send-button:hover {
+            background-color: #2c974b;
+        }
+
+        .dark-theme #send-button:disabled {
+            background-color: #94d3a2;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .dark-theme #reset-chat-button {
+            background-color: #cf222e;
+            color: white;
+        }
+
+        .dark-theme #reset-chat-button:hover {
+            background-color: #a40e26;
+        }
+
+        .dark-theme .scrape-url-controls {
+            border-top-color: #333;
+            color: #888;
+        }
+
+        .dark-theme .scrape-url-controls label {
+            color: #888;
+        }
+
+        .dark-theme #scrape-status {
+            color: #888;
+        }
+
+        .dark-theme .message-content pre {
+            border-color: #333;
+        }
+
     </style>
 </head>
-<body>
+<body id="body">
 
     <div class="chat-container">
         <!-- Header: Model Selection and API URL -->
@@ -615,6 +903,7 @@
             <label for="ollama-url-input">API URL:</label>
             <input type="text" id="ollama-url-input">
             <button id="update-ollama-url-button" title="Update API URL and refresh model list">↻</button>
+            <button id="theme-toggle-button" title="Toggle Dark Mode">☼</button>
         </div>
 
         <!-- Header: System Prompt -->
@@ -703,6 +992,7 @@
         let OLLAMA_API_URL = "http://localhost:11434"; // Default API URL
 
         // DOM Element References
+        const body = document.getElementById('body');
         const modelSelect = document.getElementById('model-select');
         const systemPromptInput = document.getElementById('system-prompt-input');
         const systemPromptToggle = document.getElementById('system-prompt-toggle');
@@ -720,6 +1010,8 @@
         const scrapeUrlCheckbox = document.getElementById('scrape-url-checkbox');
         const scrapeStatusElement = document.getElementById('scrape-status');
         const userInputHighlighter = document.getElementById('user-input-highlighter');
+        const themeToggle = document.getElementById('theme-toggle-button');
+        const prismLink = document.getElementById('prism-link');
 
         // State Variables
         let conversationHistory = [];
@@ -1826,7 +2118,7 @@
             // Check if user has manually scrolled up significantly
             const isNearBottom = chatMessagesArea.scrollHeight - chatMessagesArea.scrollTop <= chatMessagesArea.clientHeight + 50; // Generous threshold
 
-            // Only auto-scroll if user is near the bottom or hasn't scrolled up
+            // Only auto-scroll if user is near the bottom or hasn't scrolled up '
             if (!userScrolledUp || isNearBottom) {
                 chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
                 // If we auto-scrolled, reset the userScrolledUp flag
@@ -1975,6 +2267,17 @@
                 alert("Please enter a valid Ollama API URL (must start with http:// or https://).");
                 ollamaUrlInput.value = OLLAMA_API_URL; // Reset to previous valid URL
                 ollamaUrlInput.focus();
+            }
+        });
+
+        // Theme Toggle Button
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            // Prism Theme Toggle
+            if (prismLink.href === 'https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism.min.css') {
+                prismLink.href = 'https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism-dark.min.css';
+            } else {
+                prismLink.href = 'https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism.min.css';
             }
         });
 
