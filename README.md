@@ -20,3 +20,4 @@ Support the following features:
 - Attaching files (including pdf)
 - Attaching images
 - Scrape URL content found in the user input and send it to the model
+- Dark and light toggle
