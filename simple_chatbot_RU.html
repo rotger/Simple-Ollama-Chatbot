@@ -946,7 +946,7 @@
         <!-- URL Scraping Controls -->
         <div class="scrape-url-controls">
             <input type="checkbox" id="scrape-url-checkbox" name="scrape-url-checkbox">
-            <label for="scrape-url-checkbox">"Скрейпировать" URL котнтент</label>
+            <label for="scrape-url-checkbox">Скрейпировать URL котнтент</label>
             <span id="scrape-status"></span>
         </div>
     </div>
@@ -1098,7 +1098,7 @@
                 modelSelect.innerHTML = `<option value="">Ошибка загрузки моделей. Проверте URL и Ollama статус.</option>`;
                 // Display error near URL input for better visibility
                 ollamaUrlInput.style.borderColor = '#cf222e'; // Red border
-                alert(`Не удалалось извлечь модели из ${OLLAMA_API_URL}:\n${error.message}\n\nПожелайста убедитесь, что Ollama запущена, и, что API URL правильный (включая http/https).`);
+                alert(`Не удалалось извлечь модели из ${OLLAMA_API_URL}:\n${error.message}\n\nПожалуйста убедитесь, что Ollama запущена, и, что API URL правильный (включая http/https).`);
             }
         }
 
@@ -1563,7 +1563,7 @@
                                             }
                                             success = true; detailMsg = `Прочитано ${extractedContent.length} символов (JSON)`;
                                         } catch (jsonError) {
-                                            console.warn(`Ошибка парсирования JSON из ${url}:`, jsonError;
+                                            console.warn(`Ошибка парсирования JSON из ${url}:`, jsonError);
                                             // Try reading as text as fallback
                                             try {
                                                 extractedContent = await response.text(); // Re-read as text
