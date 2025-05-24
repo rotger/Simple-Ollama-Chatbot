@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Standalone Chat</title>
+
+    <link id="prism-link" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            height: 100vh;
+            margin: 0;
+            background-color: #f6f8fa;
+            color: #24292f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+            width: 100%;
+            max-width: 1200px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            box-shadow: 0 1px 0 rgba(27,31,36,0.04), 0 3px 6px rgba(27,31,36,0.1);
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+
+        .header-section {
+            padding: 16px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d0d7de;
+        }
+
+            .header-section label:not(.collapsible-header-label) {
+                font-weight: 600;
+                margin-bottom: 8px;
+                display: block;
+                font-size: 14px;
+            }
+
+            .header-section select,
+            .header-section textarea,
+            .header-section input[type="text"] {
+                width: 100%;
+                padding: 8px 12px;
+                font-size: 14px;
+                line-height: 20px;
+                color: #24292f;
+                background-color: #ffffff;
+                border: 1px solid #d0d7de;
+                border-radius: 6px;
+                box-shadow: inset 0 1px 0 rgba(27,31,36,0.075);
+                vertical-align: middle;
+                box-sizing: border-box;
+            }
+
+                .header-section select:focus,
+                .header-section textarea:focus,
+                .header-section input[type="text"]:focus {
+                    border-color: #0969da;
+                    outline: none;
+                    box-shadow: inset 0 1px 0 rgba(27,31,36,0.075), 0 0 0 3px rgba(9,105,218,0.3);
+                }
+
+        .model-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .model-selector label {
+                margin-bottom: 0;
+                flex-shrink: 0;
+            }
+
+            .model-selector select,
+            .model-selector input[type="text"] {
+                flex-grow: 1;
+                width: auto;
+            }
+
+        #update-ollama-url-button {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            font-size: 1.5em;
+            line-height: 38px;
+            text-align: center;
+            color: #24292f;
+            background-color: #f6f8fa;
+            border: 1px solid rgba(27,31,36,0.15);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.1s ease-in-out, border-color 0.1s ease-in-out;
+        }
+
+            #update-ollama-url-button:hover {
+                background-color: #f3f4f6;
+                border-color: rgba(27,31,36,0.25);
+            }
+
+        #theme-toggle-button {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            font-size: 1.5em;
+            line-height: 38px;
+            text-align: center;
+            color: #24292f;
+            background-color: #f6f8fa;
+            border: 1px solid rgba(27,31,36,0.15);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.1s ease-in-out, border-color 0.1s ease-in-out;
+        }
+
+            #theme-toggle-button:hover {
+                background-color: #f3f4f6;
+                border-color: rgba(27,31,36,0.25);
+            }
+
+        .system-prompt-area textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .collapsible-header {
+            cursor: pointer;
+            padding: 8px 0;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #24292f;
+        }
+
+            .collapsible-header:hover {
+                color: #0969da;
+            }
+
+        .toggle-icon {
+            font-family: monospace;
+            font-weight: bold;
+            margin-left: 5px;
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 6px;
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.5;
+            border: 1px solid #d0d7de;
+        }
+
+            .message-bubble .message-sender {
+                font-size: 13px;
+                font-weight: 600;
+                margin-bottom: 4px;
+                color: #57606a;
+            }
+
+            .message-bubble .message-timestamp {
+                font-size: 12px;
+                color: #57606a;
+                text-align: right;
+                margin-top: 8px;
+            }
+
+            .message-bubble .attachment-note {
+                font-size: 0.85em;
+                color: #57606a;
+                margin-bottom: 6px;
+                font-style: italic;
+            }
+
+            /* Style for the scraped content summary within the user bubble */
+            .message-bubble .scraped-info-summary {
+                font-size: 0.85em;
+                color: #57606a;
+                display: block;
+                /*white-space: pre-wrap;*/ /* Allow line breaks from the summary */
+                margin-top: 8px;
+                border-top: 1px dashed #d0d7de; /* Separator line */
+            }
+
+                .message-bubble .scraped-info-summary strong {
+                    color: #57606a;
+                    font-weight: inherit;
+                }
+
+                .message-bubble .scraped-info-summary code { /* Style code within summary */
+                    background-color: rgba(175,184,193,0.2);
+                    padding: 0.1em 0.3em;
+                    font-size: 90%;
+                    border-radius: 3px;
+                    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+                }
+
+
+        .user-message {
+            background-color: #EFF6FF;
+            border-color: #C6DBEF;
+            color: #24292f;
+            align-self: flex-end;
+        }
+
+        .ai-message {
+            background-color: #f6f8fa;
+            border-color: #d0d7de;
+            color: #24292f;
+            align-self: flex-start;
+        }
+
+            .ai-message em { /* Style for "Typing..." */
+                color: #57606a;
+                font-style: italic;
+            }
+
+        .collapsible-think-section {
+            margin: 10px 0;
+            border: 1px dashed #0969da;
+            border-radius: 6px;
+            background-color: #ffffff;
+        }
+
+            .collapsible-think-section .think-header {
+                cursor: pointer;
+                background-color: #e6f7ff;
+                color: #0366d6;
+                padding: 6px 10px;
+                font-size: 0.9em;
+                font-weight: 500;
+                border-bottom: 1px dashed #0969da;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+                .collapsible-think-section .think-header:hover {
+                    background-color: #ccebff;
+                }
+
+            .collapsible-think-section .think-content {
+                padding: 10px;
+                background-color: #f6f8fa;
+                border-top: none;
+                font-size: 0.95em;
+            }
+
+                .collapsible-think-section .think-content pre {
+                    font-size: 80%; /* Reduce size of code blocks inside think */
+                }
+
+        #file-management-area {
+            padding: 10px;
+            border-top: 1px solid #d0d7de;
+            border-bottom: 1px solid #d0d7de;
+            background-color: #f9f9f9;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+            #file-management-area.drag-over {
+                background-color: #e8f0fe;
+                border: 2px dashed #0366d6;
+            }
+
+            #file-management-area.disabled-drop-zone {
+                pointer-events: none;
+                opacity: 0.7;
+            }
+
+        #drop-zone-instruction {
+            margin: 5px 0;
+            color: #57606a;
+            font-size: 13px;
+        }
+
+        #selected-files-container {
+            margin-top: 8px;
+            text-align: left;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 8px;
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #24292f;
+        }
+
+            .file-item span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                margin-right: 8px;
+                flex-grow: 1;
+            }
+
+        .remove-file-btn {
+            background: none;
+            border: 1px solid transparent;
+            color: #cf222e;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 4px;
+            line-height: 1;
+        }
+
+            .remove-file-btn:hover {
+                color: white;
+                background-color: #cf222e;
+                border-color: #a40e26;
+            }
+
+
+        .chat-input-area {
+            display: flex;
+            padding: 16px 16px 0px 16px; /* Reduced bottom padding */
+            background-color: #ffffff;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .textarea-wrapper { /* New wrapper for textarea and highlighter */
+            position: relative;
+            flex-grow: 1;
+            font-family: inherit; /* Ensure font propagates */
+            font-size: 14px;
+            line-height: 20px;
+        }
+
+        #user-input-highlighter {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 8px 12px; /* Match textarea */
+            border: 1px solid transparent; /* Match textarea border for layout */
+            border-radius: 6px; /* Match textarea */
+            box-sizing: border-box;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow: hidden; /* Match textarea scroll behavior */
+            pointer-events: none; /* Click through */
+            z-index: 0;
+            color: transparent; /* Base text is transparent, spans provide visual */
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        .highlighted-url {
+            background-color: rgba(173, 216, 230, 0.4); /* Light blue background */
+            border-radius: 3px;
+            /* color: #0366d6; Optional: Change text color */
+            /* padding: 0 2px; Optional: Add padding */
+        }
+
+
+        .chat-input-area textarea {
+            /* flex-grow: 1; -- Handled by wrapper */
+            width: 100%; /* Fill wrapper */
+            /* height: 100%; -- Let min-height and content define height */
+            resize: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            border: 1px solid #d0d7de;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 20px;
+            box-shadow: inset 0 1px 0 rgba(27,31,36,0.075);
+            min-height: 38px; /* Start with a smaller height */
+            max-height: 250px; /* Limit maximum expansion */
+            box-sizing: border-box; /* Ensure padding/border are included */
+            /* For highlighter */
+            position: relative;
+            z-index: 1;
+            background-color: transparent !important; /* Crucial for highlighter visibility */
+            overflow-y: auto; /* Enable scrollbar when needed */
+        }
+
+            .chat-input-area textarea:focus {
+                border-color: #0969da;
+                outline: none;
+                box-shadow: inset 0 1px 0 rgba(27,31,36,0.075), 0 0 0 3px rgba(9,105,218,0.3);
+            }
+
+        .chat-input-area button {
+            border-radius: 6px;
+            padding: 8px 16px;
+            border: 1px solid rgba(27,31,36,0.15);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.1s ease-in-out;
+            height: 38px;
+            line-height: 20px;
+            flex-shrink: 0;
+        }
+
+        .button-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+            .button-stack button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+        #send-button {
+            background-color: #2da44e;
+            color: white;
+        }
+
+            #send-button:hover {
+                background-color: #2c974b;
+            }
+
+            #send-button:disabled {
+                background-color: #94d3a2;
+                color: rgba(255,255,255,0.8);
+                border-color: rgba(27,31,36,0.05);
+                cursor: not-allowed;
+            }
+
+        #reset-chat-button {
+            background-color: #cf222e;
+            color: white;
+        }
+
+            #reset-chat-button:hover {
+                background-color: #a40e26;
+            }
+
+        .scrape-url-controls {
+            padding: 8px 16px 10px 16px; /* Adjusted padding */
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            border-top: 1px solid #d0d7de; /* Add top border */
+        }
+
+            .scrape-url-controls label {
+                color: #57606a;
+                cursor: pointer;
+                user-select: none;
+                vertical-align: middle;
+            }
+
+            .scrape-url-controls input[type="checkbox"] {
+                vertical-align: middle;
+                margin-top: 0; /* Reset potential browser default margin */
+                margin-right: 4px; /* Space before label */
+            }
+
+        #scrape-status {
+            font-size: 12px;
+            margin-left: 10px;
+            color: #0366d6; /* Blue for status */
+            flex-grow: 1;
+            text-align: right;
+            min-height: 1.2em; /* Prevent layout shift when empty */
+        }
+
+
+        /* Markdown & Code Styling */
+        .message-content pre {
+            background-color: #f6f8fa;
+            color: #24292f;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 85%;
+            line-height: 1.45;
+            border: 1px solid #d0d7de;
+            margin-top: 0.5em;
+            margin-bottom: 1em;
+        }
+
+        .message-content code:not(pre code) {
+            background-color: rgba(175,184,193,0.2);
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            border-radius: 6px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
+        .message-content table {
+            border-collapse: collapse;
+            margin: 1em 0;
+            display: block;
+            width: max-content;
+            max-width: 100%;
+            overflow: auto;
+            border: 1px solid #d0d7de; /* Add border around table */
+        }
+
+        .message-content th, .message-content td {
+            border: 1px solid #d0d7de;
+            padding: 6px 13px;
+            text-align: left;
+        }
+
+        .message-content th {
+            background-color: #f6f8fa;
+            font-weight: 600;
+        }
+
+        .message-content blockquote {
+            border-left: .25em solid #d0d7de;
+            padding: 0 1em;
+            color: #57606a;
+            margin-left: 0;
+            margin-right: 0;
+            margin-top: 0.5em;
+            margin-bottom: 1em;
+        }
+
+        .message-content hr {
+            height: .25em;
+            padding: 0;
+            margin: 24px 0;
+            background-color: #d0d7de;
+            border: 0;
+        }
+
+        .message-content ul, .message-content ol {
+            padding-left: 2em;
+            margin-top: 0.5em;
+            margin-bottom: 1em;
+        }
+
+        .message-content li {
+            margin-bottom: 0.25em; /* Space between list items */
+        }
+
+        .message-content h1, .message-content h2, .message-content h3, .message-content h4, .message-content h5, .message-content h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .message-content h1 {
+            font-size: 2em;
+            padding-bottom: .3em;
+            border-bottom: 1px solid #d8dee4;
+        }
+
+        .message-content h2 {
+            font-size: 1.5em;
+            padding-bottom: .3em;
+            border-bottom: 1px solid #d8dee4;
+        }
+
+        .message-content h3 {
+            font-size: 1.25em;
+        }
+
+        .message-content h4 {
+            font-size: 1em;
+        }
+
+        .message-content h5 {
+            font-size: .875em;
+        }
+
+        .message-content h6 {
+            font-size: .85em;
+            color: #57606a;
+        }
+
+        /* MathJax specific styling if needed */
+        mjx-container {
+            overflow-x: auto;
+            overflow-y: hidden;
+            max-width: 100%;
+            display: block !important; /* Ensure block display for scroll */
+            margin: 1em 0 !important; /* Consistent margin */
+        }
+
+        /* ----- Dark Theme ----- */
+        .dark-theme {
+            background-color: #1e1e1e; /* Dark background */
+            color: #fff; /* White text */
+        }
+
+        .dark-theme .chat-container {
+            border-color: #333; /* Darker border */
+            background-color: #282828; /* Slightly lighter dark background */
+        }
+
+        .dark-theme .scrape-url-controls {
+            padding: 8px 16px 10px 16px; /* Adjusted padding */
+            background-color: #333; /* Dark background - a very common dark theme base */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            border-top: 1px solid #666; /* Slightly lighter border for dark backgrounds */
+        }
+
+            .dark-theme .scrape-url-controls label {
+                color: #b3c2d1; /* Lighter text color for labels */
+                cursor: pointer;
+                user-select: none;
+                vertical-align: middle;
+            }
+
+            .dark-theme .scrape-url-controls input[type="checkbox"] {
+                vertical-align: middle;
+                margin-top: 0; /* Reset potential browser default margin */
+                margin-right: 4px; /* Space before label */
+            }
+
+        .dark-theme #scrape-status {
+            font-size: 12px;
+            margin-left: 10px;
+            color: #0366d6; /* Blue for status - often retains the same color */
+            flex-grow: 1;
+            text-align: right;
+            min-height: 1.2em; /* Prevent layout shift when empty */
+        }        
+
+        .dark-theme .header-section {
+            background-color: #333;
+            border-bottom: 1px solid #555;
+        }
+
+        .dark-theme .header-section label:not(.collapsible-header-label) {
+            color: #fff;
+        }
+
+        .dark-theme .header-section select,
+        .dark-theme .header-section textarea,
+        .dark-theme .header-section input[type="text"] {
+            border-color: #555;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .header-section select:focus,
+        .dark-theme .header-section textarea:focus,
+        .dark-theme .header-section input[type="text"]:focus {
+            border-color: #0969da;
+            outline: none;
+            box-shadow: inset 0 1px 0 rgba(27,31,36,0.075), 0 0 0 3px rgba(9,105,218,0.3);
+        }
+
+        .dark-theme .model-selector label {
+            color: #fff;
+        }
+
+        .dark-theme .model-selector select,
+        .dark-theme .model-selector input[type="text"] {
+            border-color: #555;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme #update-ollama-url-button,
+        .dark-theme #theme-toggle-button {
+            background-color: #333;
+            border-color: #555;
+            color: #fff;
+        }
+
+        .dark-theme #update-ollama-url-button:hover,
+        .dark-theme #theme-toggle-button:hover {
+            background-color: #444;
+            border-color: #666;
+        }
+
+        .dark-theme .system-prompt-area textarea {
+            border-color: #555;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .collapsible-header {
+            color: #fff;
+        }
+
+        .dark-theme .collapsible-header:hover {
+            color: #9999CC;
+        }
+
+        .dark-theme .toggle-icon {
+            color: #888;
+        }
+
+        .dark-theme .chat-messages {
+            border-top: 1px solid #333;
+        }
+
+        .dark-theme .message-bubble {
+            border-color: #333;
+        }
+
+        .dark-theme .message-bubble .message-sender {
+            color: #888;
+        }
+
+        .dark-theme .message-bubble .message-timestamp {
+            color: #888;
+        }
+
+        .dark-theme .message-bubble .message-content pre {
+            background-color: #333;
+            color: #eee;
+        }
+
+        .dark-theme .user-message {
+            background-color: #3f3f3f; /* Slightly darker */
+            border-color: #444; /* Darker border */
+            color: #fff;
+        }
+
+        .dark-theme .ai-message {
+            background-color: #282828;
+            border-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .ai-message em {
+            color: #888;
+        }
+
+        .dark-theme .collapsible-think-section {
+            border-color: #444;
+            background-color: #282828;
+        }
+
+        .dark-theme .collapsible-think-section .think-header {
+            background-color: #444;
+            color: #fff;
+            border-bottom-color: #555;
+        }
+
+        .dark-theme .collapsible-think-section .think-header:hover {
+            background-color: #555;
+        }
+
+        .dark-theme .collapsible-think-section .think-content {
+            background-color: #333;
+        }
+
+        .dark-theme #file-management-area {
+            background-color: #333;
+            border-color: #555;
+            color: #fff;
+        }
+
+        .dark-theme #file-management-area.drag-over {
+            background-color: #444;
+            border-color: #666;
+        }
+
+        .dark-theme #file-management-area.disabled-drop-zone {
+            opacity: 1; /* Restore visibility */
+            color: #888;
+        }
+
+        .dark-theme #drop-zone-instruction {
+            color: #888;
+        }
+
+        .dark-theme #selected-files-container {
+            border-color: #555;
+        }
+
+        .dark-theme .file-item {
+            border-color: #555;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .remove-file-btn {
+            color: #cf222e;
+        }
+
+        .dark-theme .remove-file-btn:hover {
+            color: white;
+            background-color: #cf222e;
+        }
+
+        .dark-theme .chat-input-area {
+            background-color: #333;
+        }
+
+        .dark-theme .chat-input-area textarea {
+            border-color: #555;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .chat-input-area textarea:focus {
+            border-color: #0969da;
+            outline: none;
+            box-shadow: inset 0 1px 0 rgba(27,31,36,0.075), 0 0 0 3px rgba(9,105,218,0.3);
+        }
+
+        .dark-theme .chat-input-area button {
+            border-color: #555;
+            color: #fff;
+            background-color: #333;
+        }
+
+        .dark-theme #send-button {
+            background-color: #2da44e;
+            color: white;
+        }
+
+        .dark-theme #send-button:hover {
+            background-color: #2c974b;
+        }
+
+        .dark-theme #send-button:disabled {
+            background-color: #94d3a2;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .dark-theme #reset-chat-button {
+            background-color: #cf222e;
+            color: white;
+        }
+
+        .dark-theme #reset-chat-button:hover {
+            background-color: #a40e26;
+        }
+
+        .dark-theme .scrape-url-controls {
+            border-top-color: #555;
+            color: #888;
+        }
+
+        .dark-theme .scrape-url-controls label {
+            color: #888;
+        }
+
+        .dark-theme #scrape-status {
+            color: #888;
+        }
+
+        .dark-theme .message-content pre {
+            border-color: #333;
+        }
+
+    </style>
+</head>
+<body id="body">
+
+    <div class="chat-container">
+        <!-- Header: Model Selection and API URL -->
+        <div class="header-section model-selector">
+            <label for="model-select">Модель:</label>
+            <select id="model-select">
+                <option value="">Загрузка моделей...</option>
+            </select>
+            <label for="ollama-url-input">API URL:</label>
+            <input type="text" id="ollama-url-input">
+            <button id="update-ollama-url-button" title="Обновить API URL и список моделей">↻</button>
+            <button id="theme-toggle-button" title="Переключить Тёмный режим">☼</button>
+        </div>
+
+        <!-- Header: System Prompt -->
+        <div class="header-section system-prompt-area">
+            <div id="system-prompt-toggle" class="collapsible-header">
+                <span class="collapsible-header-label">Системный Промпт (Опционально)</span>
+                <span class="toggle-icon">[+]</span>
+            </div>
+            <div id="system-prompt-content" class="collapsible-content" style="display: none;">
+                <textarea id="system-prompt-input" placeholder="Как пример, Ты полезный ассистент, который говорит как пират ." rows="3"></textarea>
+            </div>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div class="chat-messages" id="chat-messages-area">
+            <!-- Messages will be appended here -->
+        </div>
+
+        <!-- File Management Area -->
+        <div id="file-management-area">
+            <input type="file" id="file-input-hidden" style="display: none;" accept=".txt,.md,.json,.csv,.py,.js,.html,.css,.xml,text/*,application/pdf,image/*" multiple>
+            <div id="selected-files-container">
+                <!-- Selected file items will be appended here -->
+            </div>
+            <p id="drop-zone-instruction">Сбросте Файлы Сюда или Нажмите для Выгрузки</p>
+        </div>
+
+        <!-- Chat Input Area -->
+        <div class="chat-input-area">
+            <div class="textarea-wrapper">
+                <div id="user-input-highlighter"></div>
+                <textarea id="user-input" placeholder="Напишите ваше сообщение (Shift+Enter для новой строчки)..." rows="4"></textarea>
+            </div>
+            <div class="button-stack">
+                <button id="send-button">Отправить</button>
+                <button id="reset-chat-button">Очистить чат</button>
+            </div>
+        </div>
+
+        <!-- URL Scraping Controls -->
+        <div class="scrape-url-controls">
+            <input type="checkbox" id="scrape-url-checkbox" name="scrape-url-checkbox">
+            <label for="scrape-url-checkbox">Скрейпировать URL котнтент</label>
+            <span id="scrape-status"></span>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>Prism.plugins.autoloader.languages_path = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/';</script>
+
+    <!-- MathJax Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: { fontCache: 'global' },
+            startup: {
+                ready: () => {
+                    console.log('MathJax готов.');
+                    MathJax.startup.defaultReady();
+                }
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- PDF.js Configuration -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        } else {
+            console.warn("pdf.js библиотека не загружена. PDF парсинг будет не доступен.");
+        }
+    </script>
+
+    <!-- Main Application Logic -->
+    <script>
+        let OLLAMA_API_URL = "http://localhost:11434"; // Default API URL
+
+        // DOM Element References
+        const body = document.getElementById('body');
+        const modelSelect = document.getElementById('model-select');
+        const systemPromptInput = document.getElementById('system-prompt-input');
+        const systemPromptToggle = document.getElementById('system-prompt-toggle');
+        const systemPromptContent = document.getElementById('system-prompt-content');
+        const chatMessagesArea = document.getElementById('chat-messages-area');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const resetChatButton = document.getElementById('reset-chat-button');
+        const ollamaUrlInput = document.getElementById('ollama-url-input');
+        const updateOllamaUrlButton = document.getElementById('update-ollama-url-button');
+        const fileManagementArea = document.getElementById('file-management-area');
+        const fileInputHidden = document.getElementById('file-input-hidden');
+        const selectedFilesContainer = document.getElementById('selected-files-container');
+        const dropZoneInstruction = document.getElementById('drop-zone-instruction');
+        const scrapeUrlCheckbox = document.getElementById('scrape-url-checkbox');
+        const scrapeStatusElement = document.getElementById('scrape-status');
+        const userInputHighlighter = document.getElementById('user-input-highlighter');
+        const themeToggle = document.getElementById('theme-toggle-button');
+        const prismLink = document.getElementById('prism-link');
+
+        // State Variables
+        let conversationHistory = [];
+        let isAwaitingResponse = false;
+        let currentAiMessageElement = null;
+        let currentAiMessageContentDiv = null;
+        let attachedFiles = []; // Stores { id, name, content, type }
+        let userScrolledUp = false; // For conditional autoscroll
+
+        // Constants
+        const THINK_TAG_PLACEHOLDER_PREFIX = "%%THINK_BLOCK_ID_";
+        const THINK_TAG_PLACEHOLDER_SUFFIX = "%%";
+
+        // Configure Marked (Markdown Parser)
+        marked.setOptions({
+            highlight: function (code, lang) {
+                const language = lang || 'markup'; // Default to markup if no lang specified
+                if (Prism.languages[language]) {
+                    try {
+                        return Prism.highlight(code, Prism.languages[language], language);
+                    } catch (e) {
+                        console.warn(`Prism подсветка не удалась для языка "${language}":`, e);
+                        return code; // Return unhighlighted on error
+                    }
+                } else {
+                    // Request language loading, return unhighlighted code for now
+                    Prism.plugins.autoloader.loadLanguages(language, () => {
+                        // Find the code block again and highlight it async
+                        // This is tricky as the element reference might be lost.
+                        // A better approach might be to re-render or use a mutation observer.
+                        // For simplicity, we accept it might not highlight immediately.
+                        // console.log(`Prism language "${language}" loaded async.`);
+                    });
+                    return code;
+                }
+            },
+            gfm: true,        // Enable GitHub Flavored Markdown
+            breaks: true,     // Use GFM line breaks (single newline = <br>)
+            pedantic: false,  // Don't be strict about parsing ambiguous cases
+            smartLists: true, // Use smarter list behavior
+            smartypants: false,// Don't convert quotes, dashes, etc.
+            headerIds: false, // Don't add IDs to headers
+            mangle: false     // Don't obfuscate email addresses
+        });
+
+        // Utility: Escape HTML characters
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g,
+                tag => ({
+                    '&': '&',
+                    '<': '<',
+                    '>': '>',
+                    "'": '\'',
+                    '"': '"'
+                }[tag] || tag)
+            );
+        }
+
+        // Utility: Polyfill for RegExp.escape if needed
+        if (!RegExp.escape) {
+            RegExp.escape = function (s) {
+                return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            };
+        }
+
+        // --- Model Loading ---
+        async function fetchModels() {
+            modelSelect.innerHTML = `<option value="">Загрузка моделей из ${escapeHTML(OLLAMA_API_URL)}...</option>`;
+            try {
+                const response = await fetch(`${OLLAMA_API_URL}/api/tags`);
+                if (!response.ok) {
+                    let errorText = `HTTP error! Status: ${response.status}`;
+                    try { // Try to get more details from the body
+                        const errorBody = await response.text();
+                        errorText += ` - ${errorBody.substring(0, 100)}${errorBody.length > 100 ? '...' : ''}`;
+                    } catch { } // Ignore body read errors
+                    throw new Error(errorText);
+                }
+                const data = await response.json();
+                populateModelSelector(data.models || []);
+            } catch (error) {
+                console.error("Ошибка извлечения моделей:", error);
+                modelSelect.innerHTML = `<option value="">Ошибка загрузки моделей. Проверте URL и Ollama статус.</option>`;
+                // Display error near URL input for better visibility
+                ollamaUrlInput.style.borderColor = '#cf222e'; // Red border
+                alert(`Не удалалось извлечь модели из ${OLLAMA_API_URL}:\n${error.message}\n\nПожалуйста убедитесь, что Ollama запущена, и, что API URL правильный (включая http/https).`);
+            }
+        }
+
+        function populateModelSelector(models) {
+            modelSelect.innerHTML = ''; // Clear previous options
+            ollamaUrlInput.style.borderColor = ''; // Reset border color on success
+            if (models.length === 0) {
+                modelSelect.innerHTML = '<option value="">Моделей не найдено на этом URL</option>';
+                return;
+            }
+            // Sort models alphabetically by name
+            models.sort((a, b) => a.name.localeCompare(b.name));
+
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.name;
+                option.textContent = model.name;
+                modelSelect.appendChild(option);
+            });
+            // Optionally select the first model or a preferred default
+            // if (modelSelect.options.length > 0) modelSelect.value = modelSelect.options[0].value;
+        }
+
+        // --- Message Display & Handling ---
+        function displayMessage(sender, mainText, scrapedInfoSummary = null, isStreaming = false, attachedFilenamesArray = null) {
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble', sender.toLowerCase() + '-message');
+
+            // 1. Sender Name
+            const senderDiv = document.createElement('div');
+            senderDiv.classList.add('message-sender');
+            senderDiv.textContent = sender === 'User' ? 'You' : (modelSelect.value.split(':')[0] || 'AI'); // Use base model name
+            messageBubble.appendChild(senderDiv);
+
+            // 2. Attachment Note (User only)
+            if (sender === 'User' && attachedFilenamesArray && attachedFilenamesArray.length > 0) {
+                const attachmentNoteDiv = document.createElement('div');
+                attachmentNoteDiv.classList.add('attachment-note');
+                const filenamesString = attachedFilenamesArray.map(name => `<code>${escapeHTML(name)}</code>`).join(', ');
+                attachmentNoteDiv.innerHTML = `Attached file(s): ${filenamesString}`;
+                messageBubble.appendChild(attachmentNoteDiv);
+            }
+
+            // 3. Main Content
+            const contentDiv = document.createElement('div');
+            contentDiv.classList.add('message-content');
+
+            if (isStreaming && sender === 'AI') {
+                contentDiv.innerHTML = "<em>Печатает...</em>";
+                currentAiMessageElement = messageBubble; // Store reference to the bubble being updated
+                currentAiMessageContentDiv = contentDiv; // Store reference to the content div
+                if (scrapeStatusElement) scrapeStatusElement.textContent = ""; // Clear scrape status when AI starts typing
+            } else {
+                // Render Markdown for non-streaming or finalized messages
+                // Use a temporary div to parse, then transfer content
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = marked.parse(mainText || ''); // Handle null/empty text
+
+                // Transfer parsed content safely
+                while (tempDiv.firstChild) {
+                    contentDiv.appendChild(tempDiv.firstChild);
+                }
+
+                Prism.highlightAllUnder(contentDiv); // Apply syntax highlighting
+                if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                    MathJax.typesetPromise([contentDiv])
+                        .catch(err => console.warn(`MathJax processing error for ${sender} message:`, err));
+                }
+            }
+            messageBubble.appendChild(contentDiv);
+
+            // 4. Scraped URL Summary (User only, appended after main content)
+            if (sender === 'User' && scrapedInfoSummary && scrapedInfoSummary.trim() !== "") {
+                const scrapedInfoContainer = document.createElement('div');
+                scrapedInfoContainer.classList.add('scraped-info-summary');
+                // Parse the summary as Markdown - allows for bold, code etc. in the summary
+                scrapedInfoContainer.innerHTML = marked.parse(scrapedInfoSummary.trim());
+                Prism.highlightAllUnder(scrapedInfoContainer); // Highlight code in summary if any
+                messageBubble.appendChild(scrapedInfoContainer);
+            }
+
+
+            // 5. Timestamp
+            const timestampDiv = document.createElement('div');
+            timestampDiv.classList.add('message-timestamp');
+            timestampDiv.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            messageBubble.appendChild(timestampDiv);
+
+            // Append to chat area and scroll
+            chatMessagesArea.appendChild(messageBubble);
+            scrollToBottom();
+            return { messageBubble, contentDiv }; // Return references if needed
+        }
+
+        // --- Think Tag Processing ---
+        function processThinkTagsInMarkdown(markdown) {
+            const thinkBlocks = [];
+            let blockIdCounter = 0;
+            // Use non-greedy match ([\s\S]*?) to capture content between tags
+            const processedMarkdown = markdown.replace(/<think>([\s\S]*?)<\/think>/g, (match, thinkContent) => {
+                const currentId = blockIdCounter++;
+                thinkBlocks.push({
+                    id: `think-${Date.now()}-${currentId}`, // Unique ID for the block
+                    rawContent: thinkContent.trim() // Store the raw content
+                });
+                // Replace the think block with a placeholder in the main markdown
+                return `${THINK_TAG_PLACEHOLDER_PREFIX}${thinkBlocks[thinkBlocks.length - 1].id}${THINK_TAG_PLACEHOLDER_SUFFIX}`;
+            });
+            return { processedMarkdown, thinkBlocks };
+        }
+
+        function renderThinkBlocksHTML(contentDiv, thinkBlocks) {
+            if (!thinkBlocks || thinkBlocks.length === 0 || !contentDiv) return;
+
+            let html = contentDiv.innerHTML; // Get the currently rendered HTML
+
+            thinkBlocks.forEach(block => {
+                const placeholder = `${THINK_TAG_PLACEHOLDER_PREFIX}${block.id}${THINK_TAG_PLACEHOLDER_SUFFIX}`;
+                const thinkSectionHtml = `
+                            <div class="collapsible-think-section">
+                                <div class="think-header" data-think-block-id="${block.id}">
+                                    <span>Мысли ИИ</span> <span class="toggle-icon">[+]</span>
+                                </div>
+                                <div class="think-content" id="think-content-${block.id}" style="display:none;">
+                                    ${marked.parse(block.rawContent)} {/* Parse the raw content as Markdown */}
+                                </div>
+                            </div>`;
+                // Use RegExp.escape for safety, replace globally
+                const placeholderRegExp = new RegExp(RegExp.escape(placeholder), 'g');
+                html = html.replace(placeholderRegExp, thinkSectionHtml);
+            });
+
+            // Update the contentDiv's HTML with the think blocks inserted
+            contentDiv.innerHTML = html;
+        }
+
+        function addThinkBlockListeners(parentElement) {
+            if (!parentElement) return;
+            // Add listeners only to headers within the specified parent element
+            parentElement.querySelectorAll('.think-header').forEach(header => {
+                // Prevent adding multiple listeners to the same header
+                if (header.dataset.listenerAttached === 'true') return;
+
+                header.addEventListener('click', () => {
+                    const blockId = header.dataset.thinkBlockId;
+                    const thinkContentElement = parentElement.querySelector(`#think-content-${blockId}`);
+                    const toggleIcon = header.querySelector('.toggle-icon');
+
+                    if (thinkContentElement && toggleIcon) {
+                        const isHidden = thinkContentElement.style.display === 'none';
+                        thinkContentElement.style.display = isHidden ? 'block' : 'none';
+                        toggleIcon.textContent = isHidden ? '[-]' : '[+]';
+
+                        // Highlight and typeset only when expanding
+                        if (isHidden) {
+                            Prism.highlightAllUnder(thinkContentElement);
+                            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                                MathJax.typesetPromise([thinkContentElement]).catch(err => console.warn("MathJax (think block expansion):", err));
+                            }
+                        }
+                    }
+                });
+                header.dataset.listenerAttached = 'true'; // Mark as listener added
+            });
+        }
+
+        // --- Streaming AI Response Handling ---
+        function updateStreamingMessage(chunk) {
+            if (currentAiMessageContentDiv) {
+                // Initialize or append to raw markdown store
+                let currentRawMarkdown = (currentAiMessageContentDiv.dataset.rawMarkdown || "") + chunk;
+                currentAiMessageContentDiv.dataset.rawMarkdown = currentRawMarkdown;
+
+                // Remove "Typing..." if it's the first chunk
+                if (currentAiMessageContentDiv.innerHTML.includes("<em>Печатает...</em>")) {
+                    currentAiMessageContentDiv.innerHTML = '';
+                }
+
+                // Process think tags from the *accumulated* raw markdown
+                const { processedMarkdown, thinkBlocks } = processThinkTagsInMarkdown(currentRawMarkdown);
+
+                // Render the main markdown (without think tags yet)
+                // Use a temporary div for parsing to avoid interfering with existing structure
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = marked.parse(processedMarkdown);
+
+                // Clear current content and append parsed main content
+                currentAiMessageContentDiv.innerHTML = '';
+                while (tempDiv.firstChild) {
+                    currentAiMessageContentDiv.appendChild(tempDiv.firstChild);
+                }
+
+
+                // Render the think blocks into the newly updated contentDiv HTML
+                renderThinkBlocksHTML(currentAiMessageContentDiv, thinkBlocks);
+
+                // Add listeners to any *newly rendered* think block headers
+                addThinkBlockListeners(currentAiMessageContentDiv);
+
+                // Highlight newly added/updated content (might re-highlight existing)
+                // Optimization: Could try to target only new elements if performance is an issue
+                Prism.highlightAllUnder(currentAiMessageContentDiv);
+
+                // Scroll to bottom if user hasn't scrolled up
+                scrollToBottom();
+            }
+        }
+
+        function finalizeAiMessage() {
+            if (currentAiMessageContentDiv && currentAiMessageContentDiv.dataset.rawMarkdown) {
+                const finalRawMarkdown = currentAiMessageContentDiv.dataset.rawMarkdown;
+
+                // Final processing and rendering pass
+                const { processedMarkdown, thinkBlocks } = processThinkTagsInMarkdown(finalRawMarkdown);
+
+                // Use temp div for final parse
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = marked.parse(processedMarkdown);
+                currentAiMessageContentDiv.innerHTML = '';
+                while (tempDiv.firstChild) {
+                    currentAiMessageContentDiv.appendChild(tempDiv.firstChild);
+                }
+
+                renderThinkBlocksHTML(currentAiMessageContentDiv, thinkBlocks);
+                addThinkBlockListeners(currentAiMessageContentDiv); // Ensure all listeners are attached
+
+                // Final highlight and MathJax pass
+                Prism.highlightAllUnder(currentAiMessageContentDiv);
+                if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                    MathJax.typesetPromise([currentAiMessageContentDiv]).catch(err => console.warn("MathJax (final message processing):", err));
+                }
+
+                // Clear the raw markdown cache
+                delete currentAiMessageContentDiv.dataset.rawMarkdown;
+            }
+            // Reset state variables
+            currentAiMessageElement = null;
+            currentAiMessageContentDiv = null;
+            userScrolledUp = false; // Reset scroll lock when message is done
+            scrollToBottom(); // Ensure it's at bottom unless user actively scrolled away during finalization
+        }
+
+
+        // --- URL Scraping Logic ---
+        function extractUrls(text) {
+            if (!text) return [];
+            // More robust regex: handles various TLDs, paths, queries, fragments
+            const urlRegex = /\b(https?:\/\/)(?:www\.)?([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6})\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+            const urls = text.match(urlRegex);
+            // Filter out potential false positives (e.g., ending with a dot if not part of domain)
+            const validUrls = urls ? urls.filter(url => !url.endsWith('.') || /\.[a-zA-Z]{2,}$/.test(url)) : [];
+            return validUrls.length > 0 ? Array.from(new Set(validUrls)) : []; // Return unique URLs
+        }
+
+        // Function to extract meaningful text from HTML
+        function extractMeaningfulText(htmlString, baseUrl) {
+            if (!htmlString || typeof htmlString !== 'string') {
+                return "[Invalid HTML input provided]";
+            }
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlString, 'text/html');
+
+                // Set base URL for relative link resolution
+                let base = doc.querySelector('base[href]');
+                if (!base) {
+                    base = doc.createElement('base');
+                    base.href = baseUrl;
+                    doc.head?.appendChild(base); // Append to head if it exists
+                }
+
+                // Remove irrelevant elements first
+                const selectorsToRemove = 'script, style, noscript, iframe, header, footer, nav, aside, form, [aria-hidden="true"], .noprint, link[rel="stylesheet"], noscript';
+                doc.querySelectorAll(selectorsToRemove).forEach(el => el.remove());
+
+                // Attempt to find the main content area - add more selectors as needed
+                let contentNode = doc.querySelector('main') || doc.querySelector('article') || doc.querySelector('.main-content') || doc.querySelector('#main') || doc.querySelector('.entry-content') || doc.querySelector('.post-content') || doc.querySelector('div[role="main"]');
+
+                // Fallback to body if no specific main content found
+                if (!contentNode) {
+                    console.warn("Could not find specific main content node, using document.body for URL:", baseUrl);
+                    contentNode = doc.body;
+                    if (!contentNode) return "[Could not parse body content]"; // Final fallback
+                }
+
+                let text = '';
+                const maxChars = 15000; // Increased limit for potentially useful content
+
+                // Recursive function to extract text, handling node types and basic formatting
+                function getTextNodes(node) {
+                    if (!node || text.length >= maxChars) return; // Stop if limit reached or node is null
+
+                    // Skip comments and processing instructions
+                    if (node.nodeType === Node.COMMENT_NODE || node.nodeType === Node.PROCESSING_INSTRUCTION_NODE) {
+                        return;
+                    }
+
+                    // Check for hidden elements based on computed style (more reliable but potentially slower)
+                    // Note: getComputedStyle might not work perfectly within DOMParser context without a window.
+                    // Relying more on tag semantics and initial removal is safer.
+                    // if (node.nodeType === Node.ELEMENT_NODE) {
+                    //     try { // Wrap in try-catch as computedStyle might fail
+                    //         const style = window.getComputedStyle(node);
+                    //         if (style.display === 'none' || style.visibility === 'hidden') return;
+                    //     } catch (e) { /* Ignore style computation errors */ }
+                    // }
+
+                    // Extract text from text nodes
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const nodeText = node.textContent.trim();
+                        if (nodeText) {
+                            text += nodeText + ' '; // Add space separator
+                        }
+                    }
+                    // Process element nodes
+                    else if (node.nodeType === Node.ELEMENT_NODE) {
+                        const tagName = node.tagName.toUpperCase();
+                        // Add line breaks *before* block elements for structure
+                        const blockElements = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'TD', 'TH', 'DIV', 'ARTICLE', 'SECTION', 'PRE', 'HR', 'TABLE', 'UL', 'OL'];
+                        if (blockElements.includes(tagName) && text.length > 0 && !text.endsWith('\n\n')) {
+                            // Add double newline only if not already there
+                            text += '\n\n';
+                        } else if (tagName === 'BR') {
+                            // Handle single line breaks
+                            if (!text.endsWith('\n')) text += '\n';
+                        }
+
+                        // Handle specific elements
+                        if (tagName === 'A' && node.href) {
+                            const linkText = node.textContent.trim();
+                            const absoluteUrl = new URL(node.getAttribute('href'), base.href).href; // Resolve relative URLs
+                            // Avoid adding link if text is identical to URL (already captured)
+                            if (linkText && linkText !== absoluteUrl) {
+                                text += `${linkText} [${absoluteUrl}] `;
+                            } else if (!linkText) {
+                                text += `[${absoluteUrl}] `; // Link with no text
+                            } else {
+                                text += `${linkText} `; // Text is the URL, just add text
+                            }
+                        } else if (tagName === 'IMG' && node.alt) {
+                            text += `[Image: ${node.alt.trim()}] `; // Include image alt text
+                        } else if (tagName !== 'A') { // Don't re-process children of links we handled
+                            // Recursively process child nodes
+                            node.childNodes.forEach(getTextNodes);
+                        }
+
+                        // Add line breaks *after* block elements
+                        if (blockElements.includes(tagName) && !text.endsWith('\n\n')) {
+                            text += '\n\n';
+                        }
+                    }
+                }
+
+                getTextNodes(contentNode);
+
+                // Cleanup whitespace:
+                text = text.replace(/(\t| )+/g, ' ');       // Replace multiple spaces/tabs with single space
+                text = text.replace(/(\n\s*){3,}/g, '\n\n'); // Replace 3+ newlines (with optional space) with double newline
+                text = text.trim();                          // Trim leading/trailing whitespace
+
+                if (text.length > maxChars) {
+                    text = text.substring(0, maxChars) + '... [Content Truncated]';
+                }
+
+                return text;
+
+            } catch (error) {
+                console.error("Error parsing HTML for URL:", baseUrl, error);
+                return `[Error parsing HTML content: ${escapeHTML(error.message)}]`;
+            }
+        }
+
+
+        // --- Main Send Message Function ---
+        async function sendMessage() {
+            userScrolledUp = false; // Reset scroll lock for new message sequence
+            const messageText = userInput.value.trim();
+            const selectedModel = modelSelect.value;
+            const systemPrompt = systemPromptInput.value.trim();
+            const shouldScrapeUrls = scrapeUrlCheckbox.checked;
+
+            let scrapedUrlContentForApi = "";           // Stores extracted text for the API call
+            let scrapedPreambleForUserDisplay = "";    // Stores summary of scraping for user message bubble
+            let urlsToScrape = [];
+            let scrapedCount = 0;
+            let failedScrapes = 0;
+
+            if (messageText) {
+                urlsToScrape = extractUrls(messageText); // Extract URLs from user's text
+            }
+
+            // --- Step 1: URL Scraping (if enabled and URLs found) ---
+            if (shouldScrapeUrls && urlsToScrape.length > 0) {
+                scrapeStatusElement.textContent = `Нашло ${urlsToScrape.length} URL(s). Скрейпинг...`;
+                sendButton.disabled = true; // Disable send while scraping
+
+                const MAX_CONCURRENT_SCRAPES = 3; // Limit simultaneous fetches
+                let activeScrapes = 0;
+                const scrapePromises = [];
+                const scrapeQueue = [...urlsToScrape]; // Create a mutable queue
+
+                const processQueue = async () => {
+                    while (scrapeQueue.length > 0 && activeScrapes < MAX_CONCURRENT_SCRAPES) {
+                        activeScrapes++;
+                        const url = scrapeQueue.shift(); // Get next URL
+
+                        scrapePromises.push(
+                            (async () => { // IIFE to capture current URL
+                                const displayUrl = url.length > 60 ? url.substring(0, 57) + '...' : url;
+                                scrapeStatusElement.textContent = `Скрейпинг (${scrapedCount + failedScrapes + 1}/${urlsToScrape.length}): ${escapeHTML(displayUrl)}`;
+                                let extractedContent = '';
+                                let success = false;
+                                let detailMsg = ''; // More specific status/error message
+                                let contentType = 'unknown';
+
+                                try {
+                                    // CORS Proxy - Replace if needed. Consider timeouts.
+                                    const proxyFetchUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                                    const controller = new AbortController();
+                                    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+
+                                    const response = await fetch(proxyFetchUrl, {
+                                        headers: { 'Accept': 'text/html,text/plain,application/json,application/xml' },
+                                        signal: controller.signal
+                                    });
+                                    clearTimeout(timeoutId); // Clear timeout if fetch succeeded
+
+                                    contentType = response.headers.get("content-type")?.split(';')[0] || 'unknown'; // Get base content type
+
+                                    if (!response.ok) {
+                                        throw new Error(`Proxy fetch failed: ${response.status} ${response.statusText}`);
+                                    }
+
+                                    // Process based on content type
+                                    if (contentType.includes("text/html")) {
+                                        scrapeStatusElement.textContent = `Парсинг HTML: ${escapeHTML(displayUrl)}`;
+                                        const htmlContent = await response.text();
+                                        extractedContent = extractMeaningfulText(htmlContent, url); // Use the robust parser
+                                        if (extractedContent.startsWith('[Error')) {
+                                            success = false; detailMsg = extractedContent; // Use the parser's error
+                                        } else if (!extractedContent) {
+                                            success = false; detailMsg = "Вытащено пустое содержимое";
+                                        } else {
+                                            success = true; detailMsg = `Парсировано ${extractedContent.length} символов`;
+                                        }
+                                    } else if (contentType.includes("text/plain")) {
+                                        scrapeStatusElement.textContent = `Чтение тектса: ${escapeHTML(displayUrl)}`;
+                                        extractedContent = await response.text();
+                                        const maxCharsText = 20000; // Limit plain text size
+                                        if (extractedContent.length > maxCharsText) {
+                                            extractedContent = extractedContent.substring(0, maxCharsText) + '... [Text Content Truncated]';
+                                        }
+                                        success = true; detailMsg = `Прочитано ${extractedContent.length} символов`;
+                                    } else if (contentType.includes("application/json")) {
+                                        scrapeStatusElement.textContent = `Чтение JSON: ${escapeHTML(displayUrl)}`;
+                                        try {
+                                            const jsonData = await response.json();
+                                            extractedContent = JSON.stringify(jsonData, null, 2); // Pretty print
+                                            const maxCharsJson = 20000;
+                                            if (extractedContent.length > maxCharsJson) {
+                                                extractedContent = extractedContent.substring(0, maxCharsJson) + `...\n[JSON Content Truncated - ${extractedContent.length} total chars]}`;
+                                            }
+                                            success = true; detailMsg = `Прочитано ${extractedContent.length} символов (JSON)`;
+                                        } catch (jsonError) {
+                                            console.warn(`Ошибка парсирования JSON из ${url}:`, jsonError);
+                                            // Try reading as text as fallback
+                                            try {
+                                                extractedContent = await response.text(); // Re-read as text
+                                                detailMsg = `Парсирование JSON провалилось, прочитано ${extractedContent.length} "сырых" символов`;
+                                                success = true; // Treat as success if raw text is read
+                                            } catch (textError) {
+                                                throw new Error("JSON parse failed, text fallback failed");
+                                            }
+                                        }
+                                    } else if (contentType.includes("application/xml") || contentType.includes("text/xml")) {
+                                        scrapeStatusElement.textContent = `Чтение XML: ${escapeHTML(displayUrl)}`;
+                                        // Treat XML like plain text for now
+                                        extractedContent = await response.text();
+                                        const maxCharsXml = 20000;
+                                        if (extractedContent.length > maxCharsXml) {
+                                            extractedContent = extractedContent.substring(0, maxCharsXml) + '... [XML Content Truncated]';
+                                        }
+                                        success = true; detailMsg = `Прочитано ${extractedContent.length} символов (XML)`;
+                                    }
+                                    else {
+                                        detailMsg = `Пропущено (Неподдерживаемый тип: ${escapeHTML(contentType)})`;
+                                        success = false;
+                                    }
+
+                                } catch (error) {
+                                    console.warn(`Ошибка скрейпинга URL ${url}:`, error);
+                                    detailMsg = `Провалилось (${escapeHTML(error.name === 'AbortError' ? 'Timeout' : error.message || "Unknown fetch error")})`;
+                                    success = false;
+                                } finally {
+                                    activeScrapes--; // Decrement active count
+                                    if (success && extractedContent) {
+                                        // Add clearly marked content for the API
+                                        scrapedUrlContentForApi += `\n\n--- Контент из ${escapeHTML(url)} ---\n${extractedContent}\n--- Конец контента из ${escapeHTML(url)} ---\n`;
+                                        // Add summary for the user bubble
+                                        scrapedPreambleForUserDisplay += `\n- **Успешно:** \`${escapeHTML(url)}\` (${detailMsg})`;
+                                        scrapedCount++;
+                                    } else {
+                                        scrapedPreambleForUserDisplay += `\n- **Провально:** \`${escapeHTML(url)}\` (${detailMsg})`;
+                                        failedScrapes++;
+                                    }
+                                    // Trigger processing the next item if queue isn't empty and slots are free
+                                    if (scrapeQueue.length > 0 || activeScrapes > 0) {
+                                        processQueue();
+                                    }
+                                }
+                            })() // End of IIFE
+                        ); // End of push
+                    } // End while loop
+                }; // End of processQueue function
+
+                // Start the asynchronous scraping process
+                processQueue();
+                await Promise.all(scrapePromises); // Wait for all initiated scraping tasks to complete
+
+                // Final status update after all scraping attempts
+                scrapeStatusElement.textContent = `Скрейпинг завершён: ${scrapedCount} удачно, ${failedScrapes} провалилось/пропущено.`;
+                if (!isAwaitingResponse) sendButton.disabled = false; // Re-enable send button only if AI is not already responding
+
+                // Format the user display preamble
+                scrapedPreambleForUserDisplay = scrapedPreambleForUserDisplay.trim();
+                if (scrapedPreambleForUserDisplay) {
+                    scrapedPreambleForUserDisplay = `**Результат URL Скрейпинга:**${scrapedPreambleForUserDisplay}`; // Add title
+                }
+
+            } else if (shouldScrapeUrls && urlsToScrape.length === 0 && messageText) {
+                scrapeStatusElement.textContent = "Не найдено URL в сообщении для скрейпинга.";
+            } else if (!shouldScrapeUrls) {
+                scrapeStatusElement.textContent = ""; // Clear status if scraping is disabled
+            }
+
+            // --- Step 2: Validate if there's anything to send ---
+            if ((!messageText && attachedFiles.length === 0 && !scrapedUrlContentForApi) || !selectedModel || isAwaitingResponse) {
+                if (!selectedModel) {
+                    alert("Пожалуйста выберите модель. Если список пустой, проверте API URL и убедитесь, что Ollama запущена.");
+                    modelSelect.focus();
+                }
+                if (isAwaitingResponse) {
+                    console.log("Уже ожидается ответ. Пожалуйста подождите.");
+                    // Optionally provide feedback to the user, e.g., make button pulse?
+                }
+                if (!messageText && attachedFiles.length === 0) {
+                    if (shouldScrapeUrls && urlsToScrape.length > 0 && !scrapedUrlContentForApi) {
+                        // This case means scraping was attempted but yielded nothing usable
+                        scrapeStatusElement.textContent = "Скрейпинг завершён, но пригодный контент не был вытащен для отправки.";
+                    } else if (!shouldScrapeUrls || urlsToScrape.length === 0) {
+                        // Standard no input case
+                        // Don't overwrite scrape status if it just finished unsuccessfully
+                        if (!scrapeStatusElement.textContent.includes('finished')) {
+                            scrapeStatusElement.textContent = "Пожалуйста напишите сообщение или прикрепите файлы.";
+                        }
+                    }
+                }
+                // Only return if truly nothing to send (no text, no files, no usable scraped content)
+                if (!messageText && attachedFiles.length === 0 && !scrapedUrlContentForApi.trim()) {
+                    // Re-enable buttons if we aborted before disabling them for API call
+                    if (!isAwaitingResponse) {
+                        sendButton.disabled = false;
+                        userInput.disabled = false;
+                        fileManagementArea.classList.remove('disabled-drop-zone');
+                    }
+                    return;
+                }
+            }
+
+            // --- Step 3: Prepare and Display User Message ---
+            isAwaitingResponse = true;
+            sendButton.disabled = true;
+            userInput.disabled = true;
+            fileManagementArea.classList.add('disabled-drop-zone'); // Disable file drop while waiting
+
+            // Display the user's message bubble (includes text, file list, and scraping summary)
+            displayMessage("User", messageText, scrapedPreambleForUserDisplay || null, false, attachedFiles.map(f => f.name));
+            userInput.value = ''; // Clear input field
+            adjustTextareaHeight(); // Reset textarea height
+            updateInputHighlighting(); // Clear URL highlights
+
+
+            // --- Step 4: Display AI Placeholder ---
+            const aiMessageElements = displayMessage("AI", "<em>Пишет...</em>", null, true); // isStreaming = true
+            currentAiMessageContentDiv = aiMessageElements.contentDiv; // Keep reference for streaming updates
+            currentAiMessageContentDiv.dataset.rawMarkdown = ""; // Initialize raw markdown cache
+
+            // --- Step 5: Prepare Content for the API Call ---
+            let userMessageForApi = ""; // Build the content string for the API
+
+            // 5a. Add Scraped Content (pre-formatted)
+            if (scrapedUrlContentForApi) {
+                userMessageForApi += "Пользователь предоставил следующие URL. Снизу текст вытащенный из них:\n"
+                userMessageForApi += scrapedUrlContentForApi; // Already includes markers and extracted text
+                userMessageForApi += "\n--- Конец Вытащенного URL Контента ---\n\n";
+            }
+
+            // 5b. Add User's Typed Message
+            if (messageText) {
+                userMessageForApi += `Пользователь' написал сообщение:\n${messageText}\n`;
+            } else if (scrapedUrlContentForApi && !messageText) {
+                // Add a note if only scraping occurred
+                userMessageForApi += `Пользователь' написал сообщение:\n(Пользователь не написал сообщение; контент сверху был вытащен из URL.)\n`;
+            }
+
+            // 5c. Add File Content
+            const imagesForApi = []; // Array for base64 image data
+            let filePreambleForApi = "";
+            let textFileContentsForApi = "";
+
+            if (attachedFiles.length > 0) {
+                filePreambleForApi = "Пользователь также прикрепил следующие файлы (содержимое включено снизу если состоит из текста):\n";
+                for (const file of attachedFiles) {
+                    const safeFilename = escapeHTML(file.name);
+                    filePreambleForApi += `- "${safeFilename}" (Type: ${file.type || 'unknown'})\n`;
+
+                    if (file.type.startsWith('image/')) {
+                        // Extract base64 data (remove data:image/...;base64,)
+                        const base64Data = file.content.split(',')[1];
+                        if (base64Data) {
+                            imagesForApi.push(base64Data);
+                        } else {
+                            console.warn(`Could not extract base64 data for image: ${file.name}`);
+                            // Optionally add a note about the failed image to text content
+                            // textFileContentsForApi += `\n[Could not process image file: ${safeFilename}]\n`;
+                        }
+                    } else {
+                        // Include text-based file content, clearly marked
+                        textFileContentsForApi += `\n\n--- Содержимое файла "${safeFilename}" ---\n\`\`\`\n${file.content}\n\`\`\`\n--- Конец содержимого файла "${safeFilename}" ---\n`;
+                    }
+                }
+                // Append file info and text content to the main API message
+                userMessageForApi += `\n\n${filePreambleForApi}${textFileContentsForApi}`;
+            }
+
+            // Final check: Ensure we're not sending an effectively empty message after processing
+            if (!userMessageForApi.trim() && imagesForApi.length === 0) {
+                console.error("Attempted to send an empty message after processing (scraping/files). Aborting.");
+                isAwaitingResponse = false;
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                fileManagementArea.classList.remove('disabled-drop-zone');
+                scrapeStatusElement.textContent = "Ничего допустимого для отправки.";
+                finalizeAiMessage(); // Clean up the "Typing..." message
+                if (currentAiMessageContentDiv) {
+                    currentAiMessageContentDiv.innerHTML = marked.parse("**Error:** Обработка привела к пустому сообщению. Ничего не отправлено.");
+                } else {
+                    displayMessage("AI", "**Error:** Обработка привела к пустому сообщению. Ничего не отправлено.", null);
+                }
+                return; // Stop execution
+            }
+
+            // --- Step 6: Construct API Request Payload ---
+            const messagesForApiPayload = [];
+            // 6a. Add System Prompt (if provided)
+            if (systemPrompt) {
+                messagesForApiPayload.push({ role: "system", content: systemPrompt });
+            }
+            // 6b. Add existing conversation history
+            messagesForApiPayload.push(...conversationHistory);
+
+            // 6c. Add the current user message (text + files/images)
+            const currentUserMessagePayload = { role: "user", content: userMessageForApi.trim() };
+            if (imagesForApi.length > 0) {
+                currentUserMessagePayload.images = imagesForApi; // Add images array if present
+            }
+            messagesForApiPayload.push(currentUserMessagePayload);
+
+            // --- Step 7: Execute API Call and Handle Response ---
+            try {
+                const requestBody = {
+                    model: selectedModel,
+                    messages: messagesForApiPayload,
+                    stream: true // Always stream for responsiveness
+                };
+
+                // Log the request payload (excluding large content for brevity)
+                console.log("Sending API Request:", JSON.stringify(requestBody, (key, value) => {
+                    if (key === 'images' && Array.isArray(value)) return [`<${value.length} image(s)>`];
+                    if (key === 'content' && typeof value === 'string' && value.length > 500) {
+                        return value.substring(0, 250) + '... [truncated] ...' + value.substring(value.length - 250);
+                    }
+                    return value;
+                }, 2));
+
+
+                // Make the API call
+                const response = await fetch(`${OLLAMA_API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody),
+                });
+
+                // Check for API errors (non-2xx status)
+                if (!response.ok) {
+                    let errorBody = await response.text(); // Try to read error details
+                    console.error(`API Error Response (${response.status}):`, errorBody);
+                    // Make error message more specific if possible
+                    let detail = errorBody.substring(0, 200); // Limit length
+                    try { // Try parsing as JSON for Ollama's typical error structure
+                        const parsedError = JSON.parse(errorBody);
+                        if (parsedError.error) detail = parsedError.error;
+                    } catch { } // Ignore JSON parse error if it's plain text
+                    throw new Error(`API request failed: ${response.status} ${response.statusText}. ${detail ? `Details: ${detail}` : ''}`);
+                }
+
+                // --- Step 8: Update Conversation History (User's Turn) ---
+                // Store a concise representation of the user's turn in history
+                let historyUserContent = messageText || "(No typed message)"; // Start with typed text
+                if (attachedFiles.length > 0) {
+                    const fileNamesForHistory = attachedFiles.map(f => `\`${escapeHTML(f.name)}\``).join(', '); // Use backticks for filenames
+                    historyUserContent = `(Attached: ${fileNamesForHistory}) ${historyUserContent}`;
+                }
+                if (scrapedPreambleForUserDisplay && scrapedCount > 0) {
+                    // Add a brief note about scraping success to history
+                    historyUserContent += `\n*(Scraped ${scrapedCount} URL(s))*`; // Markdown italic
+                }
+                conversationHistory.push({ role: "user", content: historyUserContent.trim() });
+
+
+                // --- Step 9: Process Streaming API Response ---
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let aiResponseContent = ""; // Accumulate the full AI response text
+
+                // Clear "Typing..." immediately if response starts coming
+                if (currentAiMessageContentDiv && currentAiMessageContentDiv.innerHTML.includes("<em>Печатает...</em>")) {
+                    currentAiMessageContentDiv.innerHTML = '';
+                    currentAiMessageContentDiv.dataset.rawMarkdown = ''; // Reset raw cache
+                }
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break; // Exit loop when stream ends
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    // Handle multiple JSON objects potentially arriving in one chunk
+                    const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+                    for (const line of lines) {
+                        try {
+                            const parsedLine = JSON.parse(line);
+                            // Check if it's a message content chunk
+                            if (parsedLine.message && typeof parsedLine.message.content === 'string') {
+                                const contentPiece = parsedLine.message.content;
+                                aiResponseContent += contentPiece; // Accumulate full response
+                                updateStreamingMessage(contentPiece); // Update display incrementally
+                            }
+                            // Check if the stream is finished (some Ollama responses include this)
+                            // if (parsedLine.done) {
+                            //     console.log("API indicates stream is done.");
+                            // }
+                        } catch (e) {
+                            console.warn("Failed to parse JSON line from stream:", line, e);
+                            // Optionally append raw chunk as error text? Might be messy.
+                            // updateStreamingMessage(`\n[Error parsing stream chunk: ${escapeHTML(line.substring(0,50))}...]\n`);
+                        }
+                    }
+                } // End while loop (reading stream)
+
+                // --- Step 10: Update Conversation History (AI's Turn) ---
+                conversationHistory.push({ role: "assistant", content: aiResponseContent }); // Store full AI response
+
+            } catch (error) { // Catch errors from fetch, response handling, or streaming
+                console.error("Error during sendMessage API call or processing:", error);
+                const errorMessage = `**Error:** ${escapeHTML(error.message) || "An unknown error occurred during the request."}`;
+
+                // Display the error in the AI message bubble
+                if (currentAiMessageContentDiv) {
+                    // Ensure error replaces any partial content and "Typing..."
+                    currentAiMessageContentDiv.innerHTML = marked.parse(errorMessage);
+                    currentAiMessageContentDiv.dataset.rawMarkdown = errorMessage; // Store raw error
+                    Prism.highlightAllUnder(currentAiMessageContentDiv); // Highlight code in error if any
+                } else {
+                    // Fallback if the message bubble wasn't created properly
+                    displayMessage("AI", errorMessage, null);
+                }
+                if (scrapeStatusElement) scrapeStatusElement.textContent = "Error during AI response.";
+                // Decide whether to add system errors to history (can clutter it)
+                // conversationHistory.push({ role: "assistant", content: `[System Error: ${error.message}]` });
+            } finally {
+                // --- Step 11: Final Cleanup ---
+                finalizeAiMessage();      // Final render pass for the AI message
+                clearAllAttachedFiles();  // Clear the file list for the next message
+                isAwaitingResponse = false;
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                fileManagementArea.classList.remove('disabled-drop-zone');
+                userInput.focus();       // Set focus back to input field
+            }
+        }
+
+        // --- File Handling ---
+        function renderAttachedFilesUI() {
+            selectedFilesContainer.innerHTML = ''; // Clear current list
+            if (attachedFiles.length > 0) {
+                dropZoneInstruction.style.display = 'none'; // Hide instruction text
+                selectedFilesContainer.style.display = 'block'; // Show container
+                attachedFiles.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.classList.add('file-item');
+
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.textContent = file.name;
+                    fileNameSpan.title = `${file.name} (${file.type || 'unknown type'})`; // Tooltip with type
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.classList.add('remove-file-btn');
+                    removeBtn.innerHTML = '×'; // Simple remove icon
+                    removeBtn.title = `Remove ${file.name}`;
+                    removeBtn.dataset.fileId = file.id; // Use ID for removal
+                    removeBtn.onclick = (e) => {
+                        e.stopPropagation(); // Prevent triggering file input click
+                        removeSpecificFile(file.id);
+                    };
+
+                    fileItem.appendChild(fileNameSpan);
+                    fileItem.appendChild(removeBtn);
+                    selectedFilesContainer.appendChild(fileItem);
+                });
+            } else {
+                dropZoneInstruction.style.display = 'block'; // Show instruction text
+                selectedFilesContainer.style.display = 'none'; // Hide container
+            }
+            // Adjust layout slightly if files are present
+            fileManagementArea.style.paddingBottom = attachedFiles.length > 0 ? '5px' : '10px';
+        }
+
+        async function extractTextFromPdf(arrayBuffer) {
+            if (typeof pdfjsLib === 'undefined') {
+                console.error("pdf.js is not loaded. Cannot parse PDF.");
+                return "[PDF.js library not loaded. Cannot extract text.]";
+            }
+            try {
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                const pdf = await loadingTask.promise;
+                let fullText = '';
+                const maxPagesToProcess = 50; // Limit pages to prevent hangs on huge PDFs
+                const numPages = Math.min(pdf.numPages, maxPagesToProcess);
+
+                // Show progress
+                dropZoneInstruction.textContent = `Обработка PDF: 0/${numPages} страниц...`;
+
+                for (let i = 1; i <= numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    // Join items, handling potential diacritics/ligatures better? (Basic join here)
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n\n'; // Add double newline between pages
+                    // Update progress indicator
+                    dropZoneInstruction.textContent = `Обработка PDF: ${i}/${numPages} страниц...`;
+                    // Release page resources? (Check pdf.js docs if needed for memory)
+                    page.cleanup();
+                }
+                if (pdf.numPages > maxPagesToProcess) {
+                    fullText += `\n\n[Обработка PDF остановилась после ${maxPagesToProcess} страниц. Всего страниц: ${pdf.numPages}]`;
+                }
+                dropZoneInstruction.textContent = 'Сбросте Файлы Сюда или Нажмите для Выгрузки'; // Reset instruction
+                return fullText.trim();
+            } catch (error) {
+                console.error('Error parsing PDF:', error);
+                dropZoneInstruction.textContent = 'Сбросте Файлы Сюда или Нажмите для Выгрузки'; // Reset instruction
+                return `[Error extracting text from PDF: ${escapeHTML(error.message)}]`;
+            }
+        }
+
+        async function addFilesToList(files) {
+            const maxFileSize = 50 * 1024 * 1024; // 50 MB limit per file
+            const allowedTypes = [
+                'text/plain', 'text/markdown', 'text/csv', 'text/html', 'text/xml', 'text/css', 'text/javascript',
+                'application/json', 'application/pdf', 'application/x-python-code', 'application/xml',
+                'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'
+                // Add more specific text or image types if needed
+            ];
+            // Allow files with no type, but warn
+            const allowFilesWithoutType = true;
+
+            for (const file of files) {
+                // Check if file with the same name is already added
+                if (attachedFiles.some(f => f.name === file.name)) {
+                    alert(`Файл "${escapeHTML(file.name)}" уже прикреплён.`);
+                    continue; // Skip this file
+                }
+
+                // Check file size
+                if (file.size > maxFileSize) {
+                    alert(`Файл "${escapeHTML(file.name)}" слишком большой (${(file.size / 1024 / 1024).toFixed(1)} MB). Максимальный размер ${maxFileSize / 1024 / 1024} MB.`);
+                    continue;
+                }
+
+                // Check file type
+                const fileType = file.type || 'unknown';
+                const isAllowedType = allowedTypes.some(type => fileType.startsWith(type));
+                const isUnknownButAllowed = allowFilesWithoutType && fileType === 'unknown';
+
+                if (!isAllowedType && !isUnknownButAllowed) {
+                    alert(`Тип файла "${escapeHTML(fileType)}" для "${escapeHTML(file.name)}" не поддерживается. Разрешённые типы включают текст, обычные файлы с кодом, PDF, и изображения.`);
+                    continue;
+                }
+                if (isUnknownButAllowed) {
+                    console.warn(`Файл "${escapeHTML(file.name)}" имеет неизвестный тип. Попытка прочитать как текст.`);
+                }
+
+
+                const fileId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`; // Longer random part
+                const reader = new FileReader();
+
+                reader.onload = async (e) => {
+                    let fileContent = e.target.result;
+                    let processedFileType = fileType; // Use the detected or 'unknown' type
+
+                    try { // Wrap processing in try-catch
+                        // Special handling for PDF
+                        if (fileType === 'application/pdf') {
+                            dropZoneInstruction.textContent = `Обработка PDF: ${escapeHTML(file.name)}...`;
+                            fileContent = await extractTextFromPdf(e.target.result); // Use ArrayBuffer result
+                            // extractTextFromPdf resets dropZoneInstruction on completion/error
+                        } else if (fileType.startsWith('image/')) {
+                            // Content is already Data URL (readAsDataURL)
+                        } else {
+                            // For text-based files or unknown treated as text
+                            // Content is already text (readAsText)
+                            // Optional: Add basic validation/cleaning for text?
+                            if (typeof fileContent !== 'string') {
+                                console.warn(`File ${file.name} read result was not a string. Type: ${typeof fileContent}`);
+                                fileContent = "[Error reading file content as text]";
+                            }
+                        }
+
+                        attachedFiles.push({
+                            id: fileId,
+                            name: file.name,
+                            content: fileContent, // Store extracted text, data URL, or raw text
+                            type: processedFileType // Store the determined type
+                        });
+                        renderAttachedFilesUI(); // Update the UI list
+
+                    } catch (processingError) {
+                        console.error(`Error processing file ${file.name}:`, processingError);
+                        alert(`Ошибка обработки файла "${escapeHTML(file.name)}": ${processingError.message}`);
+                        if (fileType === 'application/pdf') { // Ensure instruction resets if PDF fails here
+                            dropZoneInstruction.textContent = 'Сбросте Файлы Сюда или Нажмите для Выгрузки';
+                        }
+                    }
+                };
+
+                reader.onerror = (e) => {
+                    console.error("Error reading file:", file.name, e);
+                    alert("Ошибка чтения файла: " + escapeHTML(file.name));
+                    if (fileType === 'application/pdf') { // Reset instruction on read error too
+                        dropZoneInstruction.textContent = 'Сбросте Файлы Сюда или Нажмите для Выгрузки';
+                    }
+                };
+
+                // Read file based on type
+                if (fileType === 'application/pdf') {
+                    reader.readAsArrayBuffer(file); // Read as ArrayBuffer for pdf.js
+                } else if (fileType.startsWith('image/')) {
+                    reader.readAsDataURL(file); // Read as Base64 Data URL for images
+                } else {
+                    // Read as text for known text types or allowed unknown types
+                    reader.readAsText(file);
+                }
+            }
+            fileInputHidden.value = ''; // Clear the hidden input value after processing
+        }
+
+        function removeSpecificFile(fileId) {
+            attachedFiles = attachedFiles.filter(f => f.id !== fileId);
+            renderAttachedFilesUI(); // Update UI
+            fileInputHidden.value = ''; // Clear hidden input value if needed
+        }
+
+        function clearAllAttachedFiles() {
+            attachedFiles = [];
+            renderAttachedFilesUI(); // Update UI
+            fileInputHidden.value = ''; // Clear hidden input value
+        }
+
+        // --- Chat Reset ---
+        function resetChat() {
+            //const confirmReset = confirm("Are you sure you want to reset the chat? This will clear the conversation history and remove attached files.");
+            const confirmReset = true;
+            if (!confirmReset) return;
+
+            chatMessagesArea.innerHTML = ''; // Clear messages visually
+            conversationHistory = [];     // Clear internal history
+            clearAllAttachedFiles();      // Clear file list and UI
+
+            // Reset AI state if it was responding
+            if (isAwaitingResponse && currentAiMessageContentDiv) {
+                // No need to call finalizeAiMessage as we're clearing everything
+                currentAiMessageContentDiv.innerHTML = ''; // Clear any partial content or error
+                delete currentAiMessageContentDiv?.dataset?.rawMarkdown;
+            }
+            isAwaitingResponse = false; // Reset response flag
+            currentAiMessageElement = null;
+            currentAiMessageContentDiv = null;
+
+
+            // Reset UI elements
+            sendButton.disabled = false;
+            userInput.disabled = false;
+            userInput.value = ''; // Clear input field on reset
+            adjustTextareaHeight(); // Reset textarea height
+            updateInputHighlighting(); // Update highlighter for cleared input
+            fileManagementArea.classList.remove('disabled-drop-zone');
+            if (scrapeStatusElement) scrapeStatusElement.textContent = ""; // Clear scrape status
+            userScrolledUp = false; // Explicitly reset scroll lock
+
+            userInput.focus(); // Focus input field
+            console.log("Chat reset.");
+        }
+
+        // --- Scrolling ---
+        function scrollToBottom() {
+            // Check if user has manually scrolled up significantly
+            const isNearBottom = chatMessagesArea.scrollHeight - chatMessagesArea.scrollTop <= chatMessagesArea.clientHeight + 50; // Generous threshold
+
+            // Only auto-scroll if user is near the bottom or hasn't scrolled up '
+            if (!userScrolledUp || isNearBottom) {
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+                // If we auto-scrolled, reset the userScrolledUp flag
+                if (isNearBottom && userScrolledUp) {
+                    userScrolledUp = false;
+                }
+            }
+        }
+
+        // Autoscroll control listener
+        chatMessagesArea.addEventListener('scroll', () => {
+            // If AI is actively responding and user scrolls up significantly, set the flag
+            if (isAwaitingResponse && currentAiMessageContentDiv) {
+                // Check if user scrolled up away from the bottom
+                const isNearBottom = chatMessagesArea.scrollHeight - chatMessagesArea.scrollTop <= chatMessagesArea.clientHeight + 50;
+                if (!isNearBottom) {
+                    userScrolledUp = true; // User has scrolled away
+                } else {
+                    // If user scrolls back down near the bottom, allow auto-scroll again
+                    userScrolledUp = false;
+                }
+            }
+        }, { passive: true }); // Use passive listener for scroll performance
+
+
+        // --- Input Area Handling (URL Highlighting & Auto-Resize) ---
+        function updateInputHighlighting() {
+            if (!userInputHighlighter || !userInput) return;
+
+            const text = userInput.value;
+            // Always sync scroll positions
+            userInputHighlighter.scrollTop = userInput.scrollTop;
+            userInputHighlighter.scrollLeft = userInput.scrollLeft;
+
+            if (!scrapeUrlCheckbox.checked || !text) {
+                userInputHighlighter.innerHTML = ''; // Clear if checkbox off or no text
+                return;
+            }
+
+            // Escape HTML in the text *before* adding spans
+            let highlightedText = escapeHTML(text);
+            const urls = extractUrls(text); // Get URLs from the original text
+
+            if (urls.length > 0) {
+                // Sort URLs by length descending to handle nested URLs correctly (e.g., highlight example.com/page before example.com)
+                urls.sort((a, b) => b.length - a.length);
+
+                urls.forEach(url => {
+                    // Escape the URL itself for safe use in RegExp and replacement string
+                    const escapedUrlHtml = escapeHTML(url);
+                    // Create a RegExp to find the *HTML escaped* version in the highlightedText
+                    const urlRegExp = new RegExp(RegExp.escape(escapedUrlHtml), 'g');
+                    // Replace found instances with the span wrapper
+                    highlightedText = highlightedText.replace(
+                        urlRegExp,
+                        `<span class="highlighted-url">${escapedUrlHtml}</span>`
+                    );
+                });
+            }
+
+            // Add a non-breaking space if the text ends with a newline to ensure the highlighter div has the same height
+            if (text.endsWith('\n')) {
+                highlightedText += ' ';
+            }
+
+            userInputHighlighter.innerHTML = highlightedText;
+        }
+
+        function adjustTextareaHeight() {
+            if (!userInput || !userInputHighlighter) return;
+            // Temporarily reset height to calculate scrollHeight correctly
+            userInput.style.height = 'auto';
+            userInputHighlighter.style.height = 'auto'; // Sync highlighter wrapper
+
+            const scrollHeight = userInput.scrollHeight;
+            const maxHeight = 250; // Match max-height in CSS
+
+            // Apply new height, respecting max-height
+            const newHeight = Math.min(scrollHeight, maxHeight);
+            userInput.style.height = `${newHeight}px`;
+            userInputHighlighter.style.height = `${newHeight}px`; // Keep highlighter synced
+
+            // Ensure scrollbar appears if content exceeds max height
+            userInput.style.overflowY = scrollHeight > maxHeight ? 'scroll' : 'hidden';
+        }
+
+
+        // --- Event Listeners ---
+        sendButton.addEventListener('click', sendMessage);
+        resetChatButton.addEventListener('click', resetChat);
+
+        // Enter to send, Shift+Enter for newline
+        userInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent newline
+                sendMessage();
+            }
+            // Trigger resize on relevant keys (like backspace, delete, enter)
+            if (['Enter', 'Backspace', 'Delete'].includes(event.key)) {
+                // Use setTimeout to allow character processing before resizing
+                setTimeout(adjustTextareaHeight, 0);
+            }
+        });
+
+        // Update highlighting and adjust height on input
+        userInput.addEventListener('input', () => {
+            updateInputHighlighting();
+            adjustTextareaHeight();
+        });
+
+        // Sync scroll for manual scrollbar usage in textarea
+        userInput.addEventListener('scroll', () => {
+            if (userInputHighlighter) {
+                userInputHighlighter.scrollTop = userInput.scrollTop;
+                userInputHighlighter.scrollLeft = userInput.scrollLeft;
+            }
+        }, { passive: true });
+
+        // Update highlighting when checkbox state changes
+        scrapeUrlCheckbox.addEventListener('change', updateInputHighlighting);
+
+
+        // System Prompt Toggle
+        systemPromptToggle.addEventListener('click', () => {
+            const isHidden = systemPromptContent.style.display === 'none';
+            systemPromptContent.style.display = isHidden ? 'block' : 'none';
+            systemPromptToggle.querySelector('.toggle-icon').textContent = isHidden ? '[-]' : '[+]';
+            if (isHidden) systemPromptInput.focus(); // Focus input when revealed
+        });
+
+        // Update Ollama URL Button
+        updateOllamaUrlButton.addEventListener('click', () => {
+            const newUrl = ollamaUrlInput.value.trim().replace(/\/$/, ''); // Trim and remove trailing slash
+            if (newUrl && (newUrl.startsWith('http://') || newUrl.startsWith('https://'))) {
+                if (newUrl !== OLLAMA_API_URL) {
+                    OLLAMA_API_URL = newUrl;
+                    console.log(`Ollama API URL updated to: ${OLLAMA_API_URL}`);
+                    // Store in localStorage?
+                    // localStorage.setItem('ollamaApiUrl', OLLAMA_API_URL);
+                    fetchModels(); // Refresh model list
+                } else {
+                    console.log("API URL is the same, refreshing models anyway.");
+                    fetchModels(); // Refresh even if URL is identical
+                }
+            } else {
+                alert("Пожалуйста введите правильный Ollama API URL (должен начинаться с http:// или https://).");
+                ollamaUrlInput.value = OLLAMA_API_URL; // Reset to previous valid URL
+                ollamaUrlInput.focus();
+            }
+        });
+
+        // Theme Toggle Button
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            // Prism Theme Toggle
+            if (prismLink.href === 'https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism.min.css') {
+                prismLink.href = 'https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism-dark.min.css';
+            } else {
+                prismLink.href = 'https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism.min.css';
+            }
+        });
+
+        // File Management Area Click -> Trigger Hidden Input
+        fileManagementArea.addEventListener('click', () => {
+            // Only trigger if not disabled (i.e., not waiting for AI response)
+            if (!fileManagementArea.classList.contains('disabled-drop-zone')) {
+                fileInputHidden.click();
+            }
+        });
+
+        // Hidden File Input Change
+        fileInputHidden.addEventListener('change', (event) => {
+            if (event.target.files.length > 0) {
+                addFilesToList(event.target.files); // Process selected files
+            }
+        });
+
+        // Drag and Drop Event Listeners for File Area
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileManagementArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser default drag/drop
+        });
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileManagementArea.addEventListener(eventName, () => {
+                // Add visual cue only if dropping is allowed
+                if (!fileManagementArea.classList.contains('disabled-drop-zone')) {
+                    fileManagementArea.classList.add('drag-over');
+                }
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileManagementArea.addEventListener(eventName, () => {
+                // Always remove visual cue on leave or drop
+                fileManagementArea.classList.remove('drag-over');
+            }, false);
+        });
+
+        fileManagementArea.addEventListener('drop', (event) => {
+            // Process dropped files only if allowed
+            if (!fileManagementArea.classList.contains('disabled-drop-zone')) {
+                const dt = event.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    addFilesToList(files); // Process dropped files
+                }
+            }
+        }, false);
+
+
+        // --- Initial Setup on DOMContentLoaded ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load API URL from localStorage if available, otherwise use default
+            // const storedUrl = localStorage.getItem('ollamaApiUrl');
+            // if (storedUrl) {
+            //     OLLAMA_API_URL = storedUrl;
+            // }
+            ollamaUrlInput.value = OLLAMA_API_URL; // Set input field value
+            fetchModels(); // Fetch models on initial load
+
+            userInput.focus(); // Focus the main input field
+            renderAttachedFilesUI(); // Render initial file area state (empty)
+            updateInputHighlighting(); // Initial highlighting check
+            adjustTextareaHeight(); // Set initial textarea height correctly
+
+            console.log("Ollama Standalone Chat Initialized.");
+        });
+
+    </script>
+</body>
+</html>
