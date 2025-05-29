@@ -85,6 +85,7 @@
             .model-selector select,
             .model-selector input[type="text"] {
                 flex-grow: 1;
+                min-width: 0;
                 width: auto;
             }
 
@@ -1013,6 +1014,7 @@
         const userInputHighlighter = document.getElementById('user-input-highlighter');
         const themeToggle = document.getElementById('theme-toggle-button');
         const prismLink = document.getElementById('prism-link');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
         // State Variables
         let conversationHistory = [];
@@ -1025,6 +1027,13 @@
         // Constants
         const THINK_TAG_PLACEHOLDER_PREFIX = "%%THINK_BLOCK_ID_";
         const THINK_TAG_PLACEHOLDER_SUFFIX = "%%";
+
+        // Check if the user prefers dark mode on their device
+        if (prefersDark) {
+            // Add the 'dark-theme' class to the body element to apply dark mode styles
+            document.body.classList.add('dark-theme');
+            prismLink.href = 'https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism-dark.min.css';
+        }
 
         // Configure Marked (Markdown Parser)
         marked.setOptions({
