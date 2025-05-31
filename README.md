@@ -11,8 +11,8 @@ A simple Ollama chatbot that is easy to install and use.
 1. Make sure Ollama is running. Either by doing ```ollama serve``` in a terminal or by opening ollama.exe.
 1. Copy the file ```simple_chatbot_EN.html``` to your disk.
 1. Open the file ```simple_chatbot_EN.html``` in a web browser.
-1. If you want to set specific model on page load write it in URL. For example '''Folder/with_file/simple_chatbot_EN.html?model=qwen3:14b'''
-1. If you want to use this in Firefox AI sidebar, you can set '''browser.ml.chat.provider''' to '''folder/with_file/simple_chatbot_EN'''
+1. If you want to set specific model on page load write it in URL. For example ```Folder/with_file/simple_chatbot_EN.html?model=qwen3:14b```
+1. If you want to use this in Firefox AI sidebar, you can set ```browser.ml.chat.provider``` to ```folder/with_file/simple_chatbot_EN```
 
 If you want to modify the chatbot, you can edit the file ```simple_chatbot_EN.html``` in a text editor. The chatbot is written in HTML and JavaScript, so you can easily change the code to suit your needs.
 Also, you can copy the code in the chatbot interface and ask your favorite ai model to make it better! In fact, the entire code was created by an AI.
@@ -40,8 +40,8 @@ Support the following features:
 1. Убедитесь, что Ollama работает. Либо выполнив ```ollama serve``` в терминале, либо открыв ollama.exe.
 1. Скопируйте файл ```simple_chatbot_RU.html``` на свой диск.
 1. Откройте файл ```simple_chatbot_RU.html``` в веб-браузере.
-1. Если вы хотите поставить определённую модель во время загрузки страницы, укажите её в URL. Для примера '''Папка/с_файлом/simple_chatbot_RU.html?model=qwen3:14b'''
-1. Если вы хотите использовать это в ИИ боковой панели Firefox, вы можете установить '''browser.ml.chat.provider''' на '''Папка/с_файлом/simple_chatbot_RU'''
+1. Если вы хотите поставить определённую модель во время загрузки страницы, укажите её в URL. Для примера ```Папка/с_файлом/simple_chatbot_RU.html?model=qwen3:14b```
+1. Если вы хотите использовать это в ИИ боковой панели Firefox, вы можете установить ```browser.ml.chat.provider``` на ```Папка/с_файлом/simple_chatbot_RU```
 
 Если вы хотите модифицировать чат-бота, вы можете отредактировать файл ```simple_chatbot_RU.html``` в текстовом редакторе. Чат-бот написан на HTML и JavaScript, поэтому вы можете легко изменить код в соответствии со своими потребностями.
 Также, вы можете скопировать код в интерфейсе чат-бота и попросить свою любимую ИИ модель сделать его лучше! На самом деле, весь код был создан ИИ.
