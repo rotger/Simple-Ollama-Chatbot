@@ -1015,6 +1015,8 @@
         const themeToggle = document.getElementById('theme-toggle-button');
         const prismLink = document.getElementById('prism-link');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const url = window.location.href;
+        const urlParams = new URLSearchParams(url.split('?')[1]);
 
         // State Variables
         let conversationHistory = [];
@@ -1102,7 +1104,7 @@
                     throw new Error(errorText);
                 }
                 const data = await response.json();
-                populateModelSelector(data.models || []);
+                await populateModelSelector(data.models || []);
             } catch (error) {
                 console.error("Error fetching models:", error);
                 modelSelect.innerHTML = `<option value="">Error loading models. Check URL & Ollama status.</option>`;
@@ -2343,6 +2345,16 @@
             }
         }, false);
 
+        async function checkURLParams() {
+            await fetchModels(); // Fetch models on initial load
+            if (urlParams.has('model')) {
+                modelSelect.value = urlParams.get('model')
+            }
+            if (urlParams.has('q')) {
+                userInput.value = urlParams.get('q');
+                sendMessage();
+            }
+        }
 
         // --- Initial Setup on DOMContentLoaded ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -2352,12 +2364,12 @@
             //     OLLAMA_API_URL = storedUrl;
             // }
             ollamaUrlInput.value = OLLAMA_API_URL; // Set input field value
-            fetchModels(); // Fetch models on initial load
 
             userInput.focus(); // Focus the main input field
             renderAttachedFilesUI(); // Render initial file area state (empty)
             updateInputHighlighting(); // Initial highlighting check
             adjustTextareaHeight(); // Set initial textarea height correctly
+            checkURLParams(); // Check URL params
 
             console.log("Ollama Standalone Chat Initialized.");
         });
