@@ -12,7 +12,7 @@ A simple Ollama chatbot that is easy to install and use.
 1. Copy the file ```simple_chatbot_EN.html``` to your disk.
 1. Open the file ```simple_chatbot_EN.html``` in a web browser.
 1. If you want to set specific model on page load write it in URL. For example ```Folder/with_file/simple_chatbot_EN.html?model=qwen3:14b```
-1. If you want to use this in Firefox AI sidebar, you can set ```browser.ml.chat.provider``` to ```folder/with_file/simple_chatbot_EN```
+1. If you want to use this in Firefox AI sidebar, you can set ```browser.ml.chat.provider``` to ```Folder/with_file/simple_chatbot_EN```
 
 If you want to modify the chatbot, you can edit the file ```simple_chatbot_EN.html``` in a text editor. The chatbot is written in HTML and JavaScript, so you can easily change the code to suit your needs.
 Also, you can copy the code in the chatbot interface and ask your favorite ai model to make it better! In fact, the entire code was created by an AI.
