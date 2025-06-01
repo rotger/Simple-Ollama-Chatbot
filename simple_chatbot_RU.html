@@ -939,7 +939,7 @@
             <select id="model-select">
                 <option value="">Загрузка моделей...</option>
             </select>
-            <label for="ollama-url-input">API URL:</label>
+            <label id="api-label" for="ollama-url-input">API URL:</label>
             <input type="text" id="ollama-url-input">
             <button id="update-ollama-url-button" title="Обновить API URL и список моделей">↻</button>
             <button id="theme-toggle-button" title="Переключить Тёмный режим">☼</button>
@@ -1040,6 +1040,7 @@
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const resetChatButton = document.getElementById('reset-chat-button');
+        const apiLabel = document.getElementById('api-label');
         const ollamaUrlInput = document.getElementById('ollama-url-input');
         const updateOllamaUrlButton = document.getElementById('update-ollama-url-button');
         const fileManagementArea = document.getElementById('file-management-area');
@@ -1712,9 +1713,17 @@
         }
 
         async function checkURLParams() {
+            if (urlParams.has('api')) {
+                OLLAMA_API_URL = urlParams.get('api');
+            }
             await fetchModels(); // Fetch models on initial load
+            if (urlParams.has('hide_api')) {
+                updateOllamaUrlButton.style.display = 'none';
+                ollamaUrlInput.style.display = 'none';
+                apiLabel.style.display = 'none';
+            }
             if (urlParams.has('model')) {
-                modelSelect.value = urlParams.get('model')
+                modelSelect.value = urlParams.get('model');
             }
             if (urlParams.has('q')) {
                 userInput.value = urlParams.get('q');
