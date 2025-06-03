@@ -939,7 +939,7 @@
             <select id="model-select">
                 <option value="">Loading models...</option>
             </select>
-            <label for="ollama-url-input">API URL:</label>
+            <label id="api-label" for="ollama-url-input">API URL:</label>
             <input type="text" id="ollama-url-input">
             <button id="update-ollama-url-button" title="Update API URL and refresh model list">↻</button>
             <button id="theme-toggle-button" title="Toggle Dark Mode">☼</button>
@@ -1040,6 +1040,7 @@
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const resetChatButton = document.getElementById('reset-chat-button');
+        const apiLabel = document.getElementById('api-label');
         const ollamaUrlInput = document.getElementById('ollama-url-input');
         const updateOllamaUrlButton = document.getElementById('update-ollama-url-button');
         const fileManagementArea = document.getElementById('file-management-area');
@@ -1052,6 +1053,8 @@
         const themeToggle = document.getElementById('theme-toggle-button');
         const prismLink = document.getElementById('prism-link');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const url = window.location.href;
+        const urlParams = new URLSearchParams(url.split('?')[1]);
 
         // State Variables
         let conversationHistory = [];
@@ -1106,7 +1109,7 @@
                     throw new Error(errorText);
                 }
                 const data = await response.json();
-                populateModelSelector(data.models || []);
+                await populateModelSelector(data.models || []);
             } catch (error) {
                 console.error("Error fetching models:", error);
                 modelSelect.innerHTML = `<option value="">Error loading models. Check URL & Ollama status.</option>`;
@@ -1709,6 +1712,25 @@
             userInput.style.overflowY = scrollHeight > maxHeight ? 'scroll' : 'hidden';
         }
 
+        async function checkURLParams() {
+            if (urlParams.has('api')) {
+                OLLAMA_API_URL = urlParams.get('api');
+            }
+            await fetchModels(); // Fetch models on initial load
+            if (urlParams.has('hide_api')) {
+                updateOllamaUrlButton.style.display = 'none';
+                ollamaUrlInput.style.display = 'none';
+                apiLabel.style.display = 'none';
+            }
+            if (urlParams.has('model')) {
+                modelSelect.value = urlParams.get('model');
+            }
+            if (urlParams.has('q')) {
+                userInput.value = urlParams.get('q');
+                sendMessage();
+            }
+        }
+
         sendButton.addEventListener('click', sendMessage);
         resetChatButton.addEventListener('click', resetChat);
         userInput.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); } if (['Enter', 'Backspace', 'Delete'].includes(event.key)) setTimeout(adjustTextareaHeight, 0); });
@@ -1736,7 +1758,7 @@
         ['dragenter', 'dragover'].forEach(eventName => { fileManagementArea.addEventListener(eventName, () => { if (!fileManagementArea.classList.contains('disabled-drop-zone')) fileManagementArea.classList.add('drag-over'); }, false); });
         ['dragleave', 'drop'].forEach(eventName => { fileManagementArea.addEventListener(eventName, () => { fileManagementArea.classList.remove('drag-over'); }, false); });
         fileManagementArea.addEventListener('drop', (event) => { if (!fileManagementArea.classList.contains('disabled-drop-zone')) { const files = event.dataTransfer.files; if (files && files.length > 0) addFilesToList(files); } }, false);
-        document.addEventListener('DOMContentLoaded', () => { ollamaUrlInput.value = OLLAMA_API_URL; fetchModels(); userInput.focus(); renderAttachedFilesUI(); updateInputHighlighting(); adjustTextareaHeight(); console.log("Ollama Standalone Chat Initialized."); });
+        document.addEventListener('DOMContentLoaded', () => { ollamaUrlInput.value = OLLAMA_API_URL; checkURLParams(); userInput.focus(); renderAttachedFilesUI(); updateInputHighlighting(); adjustTextareaHeight(); console.log("Ollama Standalone Chat Initialized."); });
     </script>
 </body>
 </html>
