@@ -1379,7 +1379,7 @@
             currentAiMessageContentDiv = null;
             userScrolledUp = false;
             scrollToBottom();
-            saveMessageUI(aiMessageBubble);  
+            saveMessageUI(aiMessageBubble);
         }
 
 
@@ -1407,12 +1407,12 @@
                 console.error("Parsing error:", error);
                 return [];
             }
-        }            
+        }
 
         function extractMeaningfulText(htmlString, baseUrl) {
             if (!htmlString || typeof htmlString !== 'string') return "[Invalid HTML input provided]";
             try {
-                const doc = stringToHTML(htmlString);  
+                const doc = stringToHTML(htmlString);
                 let base = doc.querySelector('base[href]');
                 if (!base) { base = doc.createElement('base'); base.href = baseUrl; doc.head?.appendChild(base); }
 
@@ -1479,7 +1479,7 @@
             } catch {}
             return conversationHistoryTemp
         }
-          
+
         async function sendMessage() {
             userScrolledUp = false;
             const messageText = userInput.value.trim();
@@ -1612,7 +1612,7 @@
                 let historyUserContent = messageText || "(Нет написанного сообщения)";
                 if (attachedFiles.length > 0) historyUserContent = `(Прикреплено: ${attachedFiles.map(f => `\`${escapeHTML(f.name)}\``).join(', ')}) ${historyUserContent}`;
                 if (scrapedPreambleForUserDisplay && scrapedCount > 0) historyUserContent += `\n*(Скрейпировано ${scrapedCount} URL)*`;
-                saveMessage({ role: "user", content: historyUserContent.trim() });     
+                saveMessage({ role: "user", content: historyUserContent.trim() });
 
                 const reader = response.body.getReader(); const decoder = new TextDecoder(); let aiResponseContent = "";
                 if (currentAiMessageContentDiv && currentAiMessageContentDiv.innerHTML.includes("<em>Печатает...</em>")) { currentAiMessageContentDiv.innerHTML = ''; currentAiMessageContentDiv.dataset.rawMarkdown = ''; }
@@ -1632,7 +1632,7 @@
                         } catch (e) { console.warn("Failed to parse JSON line from stream:", line, e); }
                     }
                 }
-                saveMessage({ role: "assistant", content: aiResponseContent });      
+                saveMessage({ role: "assistant", content: aiResponseContent });
             } catch (error) {
                 if (error.name === 'AbortError') {
                     console.log('Fetch stream aborted by user reset.'); // This is expected during a reset.
@@ -1730,7 +1730,7 @@
             // Clear UI elements
             chatMessagesArea.innerHTML = '';
             localStorage.removeItem('conversationHistory');
-            localStorage.removeItem('conversationHistoryUI');       
+            localStorage.removeItem('conversationHistoryUI');
             clearAllAttachedFiles();
 
             // Reset UI state and enable inputs

@@ -116,30 +116,10 @@
 <                                     <span>AI Thoughts (Model Thinking)</span> <span class="toggle-icon">[+]</span>
 ---
 >                                     <span>Мысли ИИ (Модель Думает)</span> <span class="toggle-icon">[+]</span>
-1337c1337
-<         function finalizeAiMessage(externalThinkContent, aiMessageBubble) {
----
->         function finalizeAiMessage(externalThinkContent, messageBubble) {
 1349c1349
 <                                         <span>AI Thoughts (Model Thinking)</span> <span class="toggle-icon">[+]</span>
 ---
 >                                         <span>Мысли ИИ (Модель Думает)</span> <span class="toggle-icon">[+]</span>
-1382c1382
-<             saveMessageUI(aiMessageBubble);
----
->             saveMessageUI(aiMessageBubble);  
-1410c1410
-<         }
----
->         }            
-1415c1415
-<                 const doc = stringToHTML(htmlString);
----
->                 const doc = stringToHTML(htmlString);  
-1482c1482
-< 
----
->           
 1497c1497
 <                 scrapeStatusElement.textContent = `Found ${urlsToScrape.length} URL(s). Scraping...`;
 ---
@@ -222,24 +202,18 @@
 >                 scrapeStatusElement.textContent = "Ничего допустимого для отправки."; finalizeAiMessage(currentExternalThinkContent, aiMessageElements.messageBubble);
 >                 if (currentAiMessageContentDiv) currentAiMessageContentDiv.innerHTML = marked.parse("**Error:** Обработка привела к пустому сообщению. Ничего не отправлено.");
 >                 else displayMessage("AI", "**Error:** Обработка привела к пустому сообщению. Ничего не отправлено.", null);
-1612,1615c1612,1615
+1612,1614c1612,1614
 <                 let historyUserContent = messageText || "(No typed message)";
 <                 if (attachedFiles.length > 0) historyUserContent = `(Attached: ${attachedFiles.map(f => `\`${escapeHTML(f.name)}\``).join(', ')}) ${historyUserContent}`;
 <                 if (scrapedPreambleForUserDisplay && scrapedCount > 0) historyUserContent += `\n*(Scraped ${scrapedCount} URL(s))*`;
-<                 saveMessage({ role: "user", content: historyUserContent.trim() });
 ---
 >                 let historyUserContent = messageText || "(Нет написанного сообщения)";
 >                 if (attachedFiles.length > 0) historyUserContent = `(Прикреплено: ${attachedFiles.map(f => `\`${escapeHTML(f.name)}\``).join(', ')}) ${historyUserContent}`;
 >                 if (scrapedPreambleForUserDisplay && scrapedCount > 0) historyUserContent += `\n*(Скрейпировано ${scrapedCount} URL)*`;
->                 saveMessage({ role: "user", content: historyUserContent.trim() });     
 1618c1618
 <                 if (currentAiMessageContentDiv && currentAiMessageContentDiv.innerHTML.includes("<em>Typing...</em>")) { currentAiMessageContentDiv.innerHTML = ''; currentAiMessageContentDiv.dataset.rawMarkdown = ''; }
 ---
 >                 if (currentAiMessageContentDiv && currentAiMessageContentDiv.innerHTML.includes("<em>Печатает...</em>")) { currentAiMessageContentDiv.innerHTML = ''; currentAiMessageContentDiv.dataset.rawMarkdown = ''; }
-1635c1635
-<                 saveMessage({ role: "assistant", content: aiResponseContent });
----
->                 saveMessage({ role: "assistant", content: aiResponseContent });      
 1648c1648
 <                     if (scrapeStatusElement) scrapeStatusElement.textContent = "Error during AI response.";
 ---
@@ -288,10 +262,6 @@
 <                 reader.onerror = (e) => { console.error("Error reading file:", file.name, e); alert("Error reading file: " + escapeHTML(file.name)); if (fileType === 'application/pdf') dropZoneInstruction.textContent = 'Drag & Drop Files Here or Click to Upload'; };
 ---
 >                 reader.onerror = (e) => { console.error("Error reading file:", file.name, e); alert("Ошибка чтения файла: " + escapeHTML(file.name)); if (fileType === 'application/pdf') dropZoneInstruction.textContent = 'Сбросте Файлы Сюда или Нажмите для Выгрузки'; };
-1733c1733
-<             localStorage.removeItem('conversationHistoryUI');
----
->             localStorage.removeItem('conversationHistoryUI');       
 1807c1807
 <             } else { alert("Please enter a valid Ollama API URL (must start with http:// or https://)."); ollamaUrlInput.value = OLLAMA_API_URL; ollamaUrlInput.focus(); }
 ---
