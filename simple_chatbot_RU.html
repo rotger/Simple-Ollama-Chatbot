@@ -1334,7 +1334,7 @@
             scrollToBottom();
         }
 
-        function finalizeAiMessage(externalThinkContent, messageBubble) {
+        function finalizeAiMessage(externalThinkContent, aiMessageBubble) {
             // Guard: Only finalize if the content div exists (isAwaitingResponse might have been reset)
             if (currentAiMessageContentDiv) {
                 const finalRawMainContent = currentAiMessageContentDiv.dataset.rawMarkdown || "";
