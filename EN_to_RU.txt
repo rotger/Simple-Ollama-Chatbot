@@ -46,87 +46,115 @@
 <             console.warn("pdf.js library not loaded. PDF parsing will not be available.");
 ---
 >             console.warn("pdf.js библиотека не загружена. PDF парсинг будет не доступен.");
-1081c1081
+1091c1091
 <                     catch (e) { console.warn(`Prism highlighting failed for language "${language}":`, e); return code; }
 ---
 >                     catch (e) { console.warn(`Prism подсветка не удалась для языка "${language}":`, e); return code; }
-1102c1102
+1112c1112
 <             modelSelect.innerHTML = `<option value="">Loading models from ${escapeHTML(OLLAMA_API_URL)}...</option>`;
 ---
 >             modelSelect.innerHTML = `<option value="">Загрузка моделей из ${escapeHTML(OLLAMA_API_URL)}...</option>`;
-1113,1114c1113,1114
+1123,1124c1123,1124
 <                 console.error("Error fetching models:", error);
 <                 modelSelect.innerHTML = `<option value="">Error loading models. Check URL & Ollama status.</option>`;
 ---
 >                 console.error("Ошибка извлечения моделей:", error);
 >                 modelSelect.innerHTML = `<option value="">Ошибка загрузки моделей. Проверте URL и Ollama статус.</option>`;
-1116c1116
+1126c1126
 <                 alert(`Failed to fetch models from ${OLLAMA_API_URL}:\n${error.message}\n\nPlease ensure Ollama is running and the API URL is correct (including http/https).`);
 ---
 >                 alert(`Не удалалось извлечь модели из ${OLLAMA_API_URL}:\n${error.message}\n\nПожалуйста убедитесь, что Ollama запущена, и, что API URL правильный (включая http/https).`);
-1124c1124
+1134c1134
 <                 modelSelect.innerHTML = '<option value="">No models found at this URL</option>';
 ---
 >                 modelSelect.innerHTML = '<option value="">Моделей не найдено на этом URL</option>';
-1143c1143
+1153c1153
 <                 copyButton.textContent = 'Copy';
 ---
 >                 copyButton.textContent = 'Скопировать';
-1145c1145
+1155c1155
 <                 copyButton.title = 'Copy code to clipboard';
 ---
 >                 copyButton.title = 'Скопировать код в буфер обмена';
-1152c1152
+1162c1162
 <                             copyButton.textContent = 'Copied!';
 ---
 >                             copyButton.textContent = 'Скопировано!';
-1155c1155
+1165c1165
 <                                 copyButton.textContent = 'Copy';
 ---
 >                                 copyButton.textContent = 'Копировать';
-1159c1159
+1169c1169
 <                             console.error('Failed to copy code: ', err);
 ---
 >                             console.error('Не удалось скопировать код: ', err);
-1161c1161
+1171c1171
 <                             setTimeout(() => { copyButton.textContent = 'Copy'; }, 2000);
 ---
 >                             setTimeout(() => { copyButton.textContent = 'Скопировать'; }, 2000);
-1190c1190
+1192c1192
+<                 attachmentNoteDiv.innerHTML = `Attached file(s): ${filenamesString}`;
+---
+>                 attachmentNoteDiv.innerHTML = `Прикрепленные файлы: ${filenamesString}`;
+1200c1200
 <                 contentDiv.innerHTML = "<em>Typing...</em>";
 ---
 >                 contentDiv.innerHTML = "<em>Печатает...</em>";
-1244c1244
+1233c1233
+<             }
+---
+>             }                                                    
+1257c1257
 <                                     <span>AI Thoughts</span> <span class="toggle-icon">[+]</span>
 ---
 >                                     <span>Мысли ИИ</span> <span class="toggle-icon">[+]</span>
-1286c1286
+1299c1299
 <             if (currentAiMessageContentDiv.innerHTML.includes("<em>Typing...</em>")) {
 ---
 >             if (currentAiMessageContentDiv.innerHTML.includes("<em>Печатает...</em>")) {
-1298c1298
+1311c1311
 <                                     <span>AI Thoughts (Model Thinking)</span> <span class="toggle-icon">[+]</span>
 ---
 >                                     <span>Мысли ИИ (Модель Думает)</span> <span class="toggle-icon">[+]</span>
-1336c1336
+1337c1337
+<         function finalizeAiMessage(externalThinkContent, aiMessageBubble) {
+---
+>         function finalizeAiMessage(externalThinkContent, messageBubble) {
+1349c1349
 <                                         <span>AI Thoughts (Model Thinking)</span> <span class="toggle-icon">[+]</span>
 ---
 >                                         <span>Мысли ИИ (Модель Думает)</span> <span class="toggle-icon">[+]</span>
-1438c1438
+1382c1382
+<             saveMessageUI(aiMessageBubble);
+---
+>             saveMessageUI(aiMessageBubble);  
+1410c1410
+<         }
+---
+>         }            
+1415c1415
+<                 const doc = stringToHTML(htmlString);
+---
+>                 const doc = stringToHTML(htmlString);  
+1482c1482
+< 
+---
+>           
+1497c1497
 <                 scrapeStatusElement.textContent = `Found ${urlsToScrape.length} URL(s). Scraping...`;
 ---
 >                 scrapeStatusElement.textContent = `Нашло ${urlsToScrape.length} URL(s). Скрейпинг...`;
-1447c1447
+1506c1506
 <                             scrapeStatusElement.textContent = `Scraping (${scrapedCount + failedScrapes + 1}/${urlsToScrape.length}): ${escapeHTML(displayUrl)}`;
 ---
 >                             scrapeStatusElement.textContent = `Скрейпинг (${scrapedCount + failedScrapes + 1}/${urlsToScrape.length}): ${escapeHTML(displayUrl)}`;
-1458,1459c1458,1459
+1517,1518c1517,1518
 <                                     else if (!extractedContent) { success = false; detailMsg = "Extracted empty content"; }
 <                                     else { success = true; detailMsg = `Parsed ${extractedContent.length} chars`; }
 ---
 >                                     else if (!extractedContent) { success = false; detailMsg = "Вытащено пустое содержимое"; }
 >                                     else { success = true; detailMsg = `Парсировано ${extractedContent.length} символов`; }
-1463,1465c1463,1465
+1522,1524c1522,1524
 <                                     success = true; detailMsg = `Read ${extractedContent.length} chars`;
 <                                     if (contentType.includes("application/json")) { try { JSON.parse(extractedContent); } catch (jsonError) { console.warn("Scraped JSON is invalid:", jsonError, url); detailMsg += " (invalid JSON structure)"; } }
 <                                 } else { detailMsg = `Skipped (Unsupported type: ${escapeHTML(contentType)})`; success = false; }
@@ -134,43 +162,43 @@
 >                                     success = true; detailMsg = `Прочитано ${extractedContent.length} символов`;
 >                                     if (contentType.includes("application/json")) { try { JSON.parse(extractedContent); } catch (jsonError) { console.warn("Scraped JSON is invalid:", jsonError, url); detailMsg += " (некоректная JSON структура)"; } }
 >                                 } else { detailMsg = `Пропущено (Неподдерживаемы тип: ${escapeHTML(contentType)})`; success = false; }
-1468c1468
+1527c1527
 <                                 detailMsg = `Failed (${escapeHTML(error.name === 'AbortError' ? 'Timeout' : error.message || "Unknown fetch error")})`; success = false;
 ---
 >                                 detailMsg = `Провалилось (${escapeHTML(error.name === 'AbortError' ? 'Timeout' : error.message || "Unknown fetch error")})`; success = false;
-1472,1473c1472,1473
+1531,1532c1531,1532
 <                                     scrapedUrlContentForApi += `\n\n--- Content from ${escapeHTML(url)} ---\n${extractedContent}\n--- End Content from ${escapeHTML(url)} ---\n`;
 <                                     scrapedPreambleForUserDisplay += `\n- **Success:** \`${escapeHTML(url)}\` (${detailMsg})`; scrapedCount++;
 ---
 >                                     scrapedUrlContentForApi += `\n\n--- Контент из ${escapeHTML(url)} ---\n${extractedContent}\n--- Конец контент из ${escapeHTML(url)} ---\n`;
 >                                     scrapedPreambleForUserDisplay += `\n- **Успешно:** \`${escapeHTML(url)}\` (${detailMsg})`; scrapedCount++;
-1475c1475
+1534c1534
 <                                     scrapedPreambleForUserDisplay += `\n- **Failed:** \`${escapeHTML(url)}\` (${detailMsg})`; failedScrapes++;
 ---
 >                                     scrapedPreambleForUserDisplay += `\n- **Провально:** \`${escapeHTML(url)}\` (${detailMsg})`; failedScrapes++;
-1484c1484
+1543c1543
 <                 scrapeStatusElement.textContent = `Scraping finished: ${scrapedCount} successful, ${failedScrapes} failed/skipped.`;
 ---
 >                 scrapeStatusElement.textContent = `Скрейпинг завершён: ${scrapedCount} удачно, ${failedScrapes} провалилось/пропущено.`;
-1487c1487
+1546c1546
 <                 if (scrapedPreambleForUserDisplay) scrapedPreambleForUserDisplay = `**URL Scraping Results:**${scrapedPreambleForUserDisplay}`;
 ---
 >                 if (scrapedPreambleForUserDisplay) scrapedPreambleForUserDisplay = `**Результат URL Скрейпинга:**${scrapedPreambleForUserDisplay}`;
-1489c1489
+1548c1548
 <                 scrapeStatusElement.textContent = "No URLs found in the message to scrape.";
 ---
 >                 scrapeStatusElement.textContent = "Не найдено URL в сообщении для скрейпинга.";
-1493,1494c1493,1494
+1552,1553c1552,1553
 <                 if (!selectedModel) { alert("Please select a model."); modelSelect.focus(); }
 <                 if (isAwaitingResponse) console.log("Already awaiting response.");
 ---
 >                 if (!selectedModel) { alert("Пожалуйста выберите модель."); modelSelect.focus(); }
 >                 if (isAwaitingResponse) console.log("Уже ожидается ответ.");
-1505c1505
+1564c1564
 <             const aiMessageElements = displayMessage("AI", "<em>Typing...</em>", null, true);
 ---
 >             const aiMessageElements = displayMessage("ИИ", "<em>Печатает...</em>", null, true);
-1509,1511c1509,1511
+1568,1570c1568,1570
 <             if (scrapedUrlContentForApi) userMessageForApi += `The user provided URLs with the following extracted content:\n${scrapedUrlContentForApi}\n--- End of Extracted URL Content ---\n\n`;
 <             if (messageText) userMessageForApi += `User's typed message:\n${messageText}\n`;
 <             else if (scrapedUrlContentForApi) userMessageForApi += `User's typed message:\n(No typed message; content above was from URLs.)\n`;
@@ -178,51 +206,57 @@
 >             if (scrapedUrlContentForApi) userMessageForApi += `Пользователь предоставил URL с следующим вытащенным контентом:\n${scrapedUrlContentForApi}\n--- Конец Вытащенного URL Контента ---\n\n`;
 >             if (messageText) userMessageForApi += `Пользователь написал сообщение:\n${messageText}\n`;
 >             else if (scrapedUrlContentForApi) userMessageForApi += `Пользователь написал сообщение:\n(Нет написанного сообщения; контант сверху был из URL.)\n`;
-1515c1515
+1574c1574
 <                 filePreambleForApi = "The user has also attached the following files (content included for text-based):\n";
 ---
 >                 filePreambleForApi = "Пользователь также прикрепил следующие файлы (контент включён для text-based):\n";
-1519c1519
+1578c1578
 <                     else textFileContentsForApi += `\n\n--- Content of file "${safeFilename}" ---\n\`\`\`\n${file.content}\n\`\`\`\n--- End Content of file "${safeFilename}" ---\n`;
 ---
 >                     else textFileContentsForApi += `\n\n--- Содержимое файла "${safeFilename}" ---\n\`\`\`\n${file.content}\n\`\`\`\n--- Конец содержимого файла "${safeFilename}" ---\n`;
-1527,1529c1527,1529
-<                 scrapeStatusElement.textContent = "Nothing valid to send."; finalizeAiMessage(currentExternalThinkContent);
+1586,1588c1586,1588
+<                 scrapeStatusElement.textContent = "Nothing valid to send."; finalizeAiMessage(currentExternalThinkContent, aiMessageElements.messageBubble);
 <                 if (currentAiMessageContentDiv) currentAiMessageContentDiv.innerHTML = marked.parse("**Error:** Processing resulted in an empty message. Nothing sent.");
 <                 else displayMessage("AI", "**Error:** Processing resulted in an empty message. Nothing sent.", null);
 ---
->                 scrapeStatusElement.textContent = "Ничего допустимого для отправки."; finalizeAiMessage(currentExternalThinkContent);
+>                 scrapeStatusElement.textContent = "Ничего допустимого для отправки."; finalizeAiMessage(currentExternalThinkContent, aiMessageElements.messageBubble);
 >                 if (currentAiMessageContentDiv) currentAiMessageContentDiv.innerHTML = marked.parse("**Error:** Обработка привела к пустому сообщению. Ничего не отправлено.");
 >                 else displayMessage("AI", "**Error:** Обработка привела к пустому сообщению. Ничего не отправлено.", null);
-1553,1555c1553,1555
+1612,1615c1612,1615
 <                 let historyUserContent = messageText || "(No typed message)";
 <                 if (attachedFiles.length > 0) historyUserContent = `(Attached: ${attachedFiles.map(f => `\`${escapeHTML(f.name)}\``).join(', ')}) ${historyUserContent}`;
 <                 if (scrapedPreambleForUserDisplay && scrapedCount > 0) historyUserContent += `\n*(Scraped ${scrapedCount} URL(s))*`;
+<                 saveMessage({ role: "user", content: historyUserContent.trim() });
 ---
 >                 let historyUserContent = messageText || "(Нет написанного сообщения)";
 >                 if (attachedFiles.length > 0) historyUserContent = `(Прикреплено: ${attachedFiles.map(f => `\`${escapeHTML(f.name)}\``).join(', ')}) ${historyUserContent}`;
 >                 if (scrapedPreambleForUserDisplay && scrapedCount > 0) historyUserContent += `\n*(Скрейпировано ${scrapedCount} URL)*`;
-1559c1559
+>                 saveMessage({ role: "user", content: historyUserContent.trim() });     
+1618c1618
 <                 if (currentAiMessageContentDiv && currentAiMessageContentDiv.innerHTML.includes("<em>Typing...</em>")) { currentAiMessageContentDiv.innerHTML = ''; currentAiMessageContentDiv.dataset.rawMarkdown = ''; }
 ---
 >                 if (currentAiMessageContentDiv && currentAiMessageContentDiv.innerHTML.includes("<em>Печатает...</em>")) { currentAiMessageContentDiv.innerHTML = ''; currentAiMessageContentDiv.dataset.rawMarkdown = ''; }
-1589c1589
+1635c1635
+<                 saveMessage({ role: "assistant", content: aiResponseContent });
+---
+>                 saveMessage({ role: "assistant", content: aiResponseContent });      
+1648c1648
 <                     if (scrapeStatusElement) scrapeStatusElement.textContent = "Error during AI response.";
 ---
 >                     if (scrapeStatusElement) scrapeStatusElement.textContent = "Ошибка во время ответа ИИ.";
-1611c1611
+1670c1670
 <                     const removeBtn = document.createElement('button'); removeBtn.classList.add('remove-file-btn'); removeBtn.innerHTML = '×'; removeBtn.title = `Remove ${file.name}`; removeBtn.dataset.fileId = file.id;
 ---
 >                     const removeBtn = document.createElement('button'); removeBtn.classList.add('remove-file-btn'); removeBtn.innerHTML = '×'; removeBtn.title = `Убрать ${file.name}`; removeBtn.dataset.fileId = file.id;
-1623c1623
+1682c1682
 <                 dropZoneInstruction.textContent = `Processing PDF: 0/${numPages} pages...`;
 ---
 >                 dropZoneInstruction.textContent = `Обработка PDF: 0/${numPages} страниц...`;
-1627c1627
+1686c1686
 <                     dropZoneInstruction.textContent = `Processing PDF: ${i}/${numPages} pages...`; page.cleanup();
 ---
 >                     dropZoneInstruction.textContent = `Обработка PDF: ${i}/${numPages} страниц...`; page.cleanup();
-1629,1631c1629,1631
+1688,1690c1688,1690
 <                 if (pdf.numPages > maxPagesToProcess) fullText += `\n\n[PDF processing stopped after ${maxPagesToProcess} pages. Total pages: ${pdf.numPages}]`;
 <                 dropZoneInstruction.textContent = 'Drag & Drop Files Here or Click to Upload'; return fullText.trim();
 <             } catch (error) { console.error('Error parsing PDF:', error); dropZoneInstruction.textContent = 'Drag & Drop Files Here or Click to Upload'; return `[Error extracting text from PDF: ${escapeHTML(error.message)}]`; }
@@ -230,31 +264,35 @@
 >                 if (pdf.numPages > maxPagesToProcess) fullText += `\n\n[Обработка PDF остановилась после ${maxPagesToProcess} страниц. Всего страниц: ${pdf.numPages}]`;
 >                 dropZoneInstruction.textContent = 'Сбросте Файлы Сюда или Нажмите для Выгрузки'; return fullText.trim();
 >             } catch (error) { console.error('Error parsing PDF:', error); dropZoneInstruction.textContent = 'Сбросте Файлы Сюда или Нажмите для Выгрузки'; return `[Error extracting text from PDF: ${escapeHTML(error.message)}]`; }
-1638,1639c1638,1639
+1697,1698c1697,1698
 <                 if (attachedFiles.some(f => f.name === file.name)) { alert(`File "${escapeHTML(file.name)}" is already attached.`); continue; }
 <                 if (file.size > maxFileSize) { alert(`File "${escapeHTML(file.name)}" is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum size is ${maxFileSize / 1024 / 1024} MB.`); continue; }
 ---
 >                 if (attachedFiles.some(f => f.name === file.name)) { alert(`Файл "${escapeHTML(file.name)}" уже прикреплён.`); continue; }
 >                 if (file.size > maxFileSize) { alert(`Файл "${escapeHTML(file.name)}" слишком большой (${(file.size / 1024 / 1024).toFixed(1)} MB). Максимальный размер ${maxFileSize / 1024 / 1024} MB.`); continue; }
-1641,1642c1641,1642
+1700,1701c1700,1701
 <                 if (!isAllowedType && !isUnknownButAllowed) { alert(`File type "${escapeHTML(fileType)}" for "${escapeHTML(file.name)}" is not supported.`); continue; }
 <                 if (isUnknownButAllowed) console.warn(`File "${escapeHTML(file.name)}" has an unknown type. Attempting to read as text.`);
 ---
 >                 if (!isAllowedType && !isUnknownButAllowed) { alert(`Тип файла "${escapeHTML(fileType)}" для "${escapeHTML(file.name)}" не поддерживается.`); continue; }
 >                 if (isUnknownButAllowed) console.warn(`Файл "${escapeHTML(file.name)}" имеет неизвестный тип. Попытка прочитать как текст.`);
-1647c1647
+1706c1706
 <                         if (fileType === 'application/pdf') { dropZoneInstruction.textContent = `Processing PDF: ${escapeHTML(file.name)}...`; fileContent = await extractTextFromPdf(e.target.result); }
 ---
 >                         if (fileType === 'application/pdf') { dropZoneInstruction.textContent = `Обработка PDF: ${escapeHTML(file.name)}...`; fileContent = await extractTextFromPdf(e.target.result); }
-1650c1650
+1709c1709
 <                     } catch (processingError) { console.error(`Error processing file ${file.name}:`, processingError); alert(`Error processing file "${escapeHTML(file.name)}": ${processingError.message}`); if (fileType === 'application/pdf') dropZoneInstruction.textContent = 'Drag & Drop Files Here or Click to Upload'; }
 ---
 >                     } catch (processingError) { console.error(`Error processing file ${file.name}:`, processingError); alert(`Ошибка обработки файла "${escapeHTML(file.name)}": ${processingError.message}`); if (fileType === 'application/pdf') dropZoneInstruction.textContent = 'Сбросте Файлы Сюда или Нажмите для Выгрузки'; }
-1652c1652
+1711c1711
 <                 reader.onerror = (e) => { console.error("Error reading file:", file.name, e); alert("Error reading file: " + escapeHTML(file.name)); if (fileType === 'application/pdf') dropZoneInstruction.textContent = 'Drag & Drop Files Here or Click to Upload'; };
 ---
 >                 reader.onerror = (e) => { console.error("Error reading file:", file.name, e); alert("Ошибка чтения файла: " + escapeHTML(file.name)); if (fileType === 'application/pdf') dropZoneInstruction.textContent = 'Сбросте Файлы Сюда или Нажмите для Выгрузки'; };
-1739c1739
+1733c1733
+<             localStorage.removeItem('conversationHistoryUI');
+---
+>             localStorage.removeItem('conversationHistoryUI');       
+1807c1807
 <             } else { alert("Please enter a valid Ollama API URL (must start with http:// or https://)."); ollamaUrlInput.value = OLLAMA_API_URL; ollamaUrlInput.focus(); }
 ---
 >             } else { alert("Пожалуйста введите правильный Ollama API URL (должен начинаться с http:// или https://)."); ollamaUrlInput.value = OLLAMA_API_URL; ollamaUrlInput.focus(); }

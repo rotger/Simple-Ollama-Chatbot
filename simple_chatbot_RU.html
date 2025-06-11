@@ -1057,7 +1057,6 @@
         const urlParams = new URLSearchParams(url.split('?')[1]);
 
         // State Variables
-        let conversationHistory = [];
         let isAwaitingResponse = false;
         let currentAiMessageElement = null;
         let currentAiMessageContentDiv = null;
@@ -1073,6 +1072,16 @@
             document.body.classList.add('dark-theme');
             prismLink.href = 'https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism-dark.min.css';
         }
+
+        try {
+            conversationHistoryUITemp = conversationHistoryUI();
+            conversationHistoryUITemp.forEach((item) => {
+                let messageTemp = convertToDOM(item)[0];
+                console.log("converting", item, messageTemp);
+                chatMessagesArea.appendChild(messageTemp);
+            });
+            // chatMessagesArea.appendChild
+        } catch {} 
 
         marked.setOptions({
             highlight: function (code, lang) {
@@ -1180,7 +1189,7 @@
                 const attachmentNoteDiv = document.createElement('div');
                 attachmentNoteDiv.classList.add('attachment-note');
                 const filenamesString = attachedFilenamesArray.map(name => `<code>${escapeHTML(name)}</code>`).join(', ');
-                attachmentNoteDiv.innerHTML = `Attached file(s): ${filenamesString}`;
+                attachmentNoteDiv.innerHTML = `Прикрепленные файлы: ${filenamesString}`;
                 messageBubble.appendChild(attachmentNoteDiv);
             }
 
@@ -1219,6 +1228,9 @@
             messageBubble.appendChild(timestampDiv);
 
             chatMessagesArea.appendChild(messageBubble);
+            if (sender === 'User') {
+                saveMessageUI(messageBubble);
+            }                                                    
             scrollToBottom();
             return { messageBubble, contentDiv };
         }
@@ -1322,7 +1334,7 @@
             scrollToBottom();
         }
 
-        function finalizeAiMessage(externalThinkContent) {
+        function finalizeAiMessage(externalThinkContent, messageBubble) {
             // Guard: Only finalize if the content div exists (isAwaitingResponse might have been reset)
             if (currentAiMessageContentDiv) {
                 const finalRawMainContent = currentAiMessageContentDiv.dataset.rawMarkdown || "";
@@ -1367,6 +1379,7 @@
             currentAiMessageContentDiv = null;
             userScrolledUp = false;
             scrollToBottom();
+            saveMessageUI(aiMessageBubble);  
         }
 
 
@@ -1377,12 +1390,29 @@
             const validUrls = urls ? urls.filter(url => !url.endsWith('.') || /\.[a-zA-Z]{2,}$/.test(url)) : [];
             return validUrls.length > 0 ? Array.from(new Set(validUrls)) : [];
         }
+        
+        function stringToHTML(str) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(str, 'text/html');
+            return doc;
+        }
+
+        function convertToDOM(htmlString) {
+            const targetDiv = document.createElement('div');
+          
+            try {
+                targetDiv.innerHTML = htmlString;
+                return Array.from(targetDiv.childNodes);
+            } catch (error) {
+                console.error("Parsing error:", error);
+                return [];
+            }
+        }            
 
         function extractMeaningfulText(htmlString, baseUrl) {
             if (!htmlString || typeof htmlString !== 'string') return "[Invalid HTML input provided]";
             try {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlString, 'text/html');
+                const doc = stringToHTML(htmlString);  
                 let base = doc.querySelector('base[href]');
                 if (!base) { base = doc.createElement('base'); base.href = baseUrl; doc.head?.appendChild(base); }
 
@@ -1422,6 +1452,34 @@
             } catch (error) { console.error("Error parsing HTML for URL:", baseUrl, error); return `[Error parsing HTML content: ${escapeHTML(error.message)}]`; }
         }
 
+        function saveMessage(message) {
+            let conversationHistoryTemp = conversationHistory();
+            conversationHistoryTemp.push(message);
+            localStorage.setItem('conversationHistory', JSON.stringify(conversationHistoryTemp));
+        }
+
+        function saveMessageUI(message) {
+            let conversationHistoryTemp = conversationHistoryUI();
+            conversationHistoryTemp.push(message.outerHTML);
+            localStorage.setItem('conversationHistoryUI', JSON.stringify(conversationHistoryTemp));
+        }
+
+        function conversationHistory() {
+            let conversationHistoryTemp = [];
+            try {
+                conversationHistoryTemp = JSON.parse(localStorage.getItem('conversationHistory')) || [];
+            } catch {}
+            return conversationHistoryTemp
+        }
+
+        function conversationHistoryUI() {
+            let conversationHistoryTemp = [];
+            try {
+                conversationHistoryTemp = JSON.parse(localStorage.getItem('conversationHistoryUI')) || [];
+            } catch {}
+            return conversationHistoryTemp
+        }
+          
         async function sendMessage() {
             userScrolledUp = false;
             const messageText = userInput.value.trim();
@@ -1525,7 +1583,7 @@
             if (!userMessageForApi.trim() && imagesForApi.length === 0) {
                 console.error("Attempted to send an empty message after processing. Aborting.");
                 isAwaitingResponse = false; sendButton.disabled = false; userInput.disabled = false; fileManagementArea.classList.remove('disabled-drop-zone');
-                scrapeStatusElement.textContent = "Ничего допустимого для отправки."; finalizeAiMessage(currentExternalThinkContent);
+                scrapeStatusElement.textContent = "Ничего допустимого для отправки."; finalizeAiMessage(currentExternalThinkContent, aiMessageElements.messageBubble);
                 if (currentAiMessageContentDiv) currentAiMessageContentDiv.innerHTML = marked.parse("**Error:** Обработка привела к пустому сообщению. Ничего не отправлено.");
                 else displayMessage("AI", "**Error:** Обработка привела к пустому сообщению. Ничего не отправлено.", null);
                 return;
@@ -1533,7 +1591,7 @@
 
             const messagesForApiPayload = [];
             if (systemPrompt) messagesForApiPayload.push({ role: "system", content: systemPrompt });
-            messagesForApiPayload.push(...conversationHistory);
+            messagesForApiPayload.push(...conversationHistory());
             const currentUserMessagePayload = { role: "user", content: userMessageForApi.trim() };
             if (imagesForApi.length > 0) currentUserMessagePayload.images = imagesForApi;
             messagesForApiPayload.push(currentUserMessagePayload);
@@ -1554,7 +1612,7 @@
                 let historyUserContent = messageText || "(Нет написанного сообщения)";
                 if (attachedFiles.length > 0) historyUserContent = `(Прикреплено: ${attachedFiles.map(f => `\`${escapeHTML(f.name)}\``).join(', ')}) ${historyUserContent}`;
                 if (scrapedPreambleForUserDisplay && scrapedCount > 0) historyUserContent += `\n*(Скрейпировано ${scrapedCount} URL)*`;
-                conversationHistory.push({ role: "user", content: historyUserContent.trim() });
+                saveMessage({ role: "user", content: historyUserContent.trim() });     
 
                 const reader = response.body.getReader(); const decoder = new TextDecoder(); let aiResponseContent = "";
                 if (currentAiMessageContentDiv && currentAiMessageContentDiv.innerHTML.includes("<em>Печатает...</em>")) { currentAiMessageContentDiv.innerHTML = ''; currentAiMessageContentDiv.dataset.rawMarkdown = ''; }
@@ -1574,7 +1632,7 @@
                         } catch (e) { console.warn("Failed to parse JSON line from stream:", line, e); }
                     }
                 }
-                conversationHistory.push({ role: "assistant", content: aiResponseContent });
+                saveMessage({ role: "assistant", content: aiResponseContent });      
             } catch (error) {
                 if (error.name === 'AbortError') {
                     console.log('Fetch stream aborted by user reset.'); // This is expected during a reset.
@@ -1590,7 +1648,7 @@
                     if (scrapeStatusElement) scrapeStatusElement.textContent = "Ошибка во время ответа ИИ.";
                 }
             } finally {
-                finalizeAiMessage(currentExternalThinkContent); // Always call to cleanup current message element
+                finalizeAiMessage(currentExternalThinkContent, aiMessageElements.messageBubble); // Always call to cleanup current message element
                 currentStreamController = null; // Clear the controller
                 clearAllAttachedFiles();
                 // Only reset UI if isAwaitingResponse is still true (i.e., not reset by resetChat)
@@ -1671,7 +1729,8 @@
 
             // Clear UI elements
             chatMessagesArea.innerHTML = '';
-            conversationHistory = [];
+            localStorage.removeItem('conversationHistory');
+            localStorage.removeItem('conversationHistoryUI');       
             clearAllAttachedFiles();
 
             // Reset UI state and enable inputs
