@@ -11,7 +11,7 @@ A simple Ollama chatbot that is easy to install and use.
 - If you want to set specific model on page load write it in URL. For example ```Folder/with_file/simple_chatbot_EN.html?model=qwen3:14b```
 - If you want to use this in Firefox AI sidebar, you can set ```browser.ml.chat.provider``` to ```Folder/with_file/simple_chatbot_EN```
 
-## Ollama setup instruction
+#### Ollama setup instruction
 1. Install Ollama: [ollama.com/download](https://ollama.com/download).
 1. Install your favorite model. For example, you can use the following command to install the qwen3 model: ```ollama pull qwen3```.
 1. Set environment variable ```OLLAMA_ORIGINS=*```. On windows, you can set it simply by running this powershell command: ```[Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS","*","User")```.
