@@ -1063,6 +1063,7 @@
         let attachedFiles = [];
         let userScrolledUp = false;
         let currentStreamController = null; // To abort fetch streams
+        let isSavingSystemPrompt = false;
 
         // Constants
         const THINK_TAG_PLACEHOLDER_PREFIX = "%%THINK_BLOCK_ID_";
@@ -1074,6 +1075,7 @@
         }
 
         try {
+            systemPromptInput.value = localStorage.getItem('systemPrompt') || "";
             conversationHistoryUITemp = conversationHistoryUI();
             conversationHistoryUITemp.forEach((item) => {
                 let messageTemp = convertToDOM(item)[0];
@@ -1479,6 +1481,24 @@
             } catch {}
             return conversationHistoryTemp
         }
+
+        function saveSystemPrompt(value) {
+            if (!isSavingSystemPrompt) {
+                isSavingSystemPrompt = true;
+                
+                const savedValue = localStorage.getItem('systemPrompt');
+
+                if (value !== savedValue && value !== '') {
+                    localStorage.setItem('systemPrompt', value);
+                } else if (value === '') {
+                    localStorage.removeItem('systemPrompt');
+                }
+                
+                isSavingSystemPrompt = false;
+            }
+        }
+
+        systemPromptInput.addEventListener('input', () => saveSystemPrompt(systemPromptInput.value.trim()));
 
         async function sendMessage() {
             userScrolledUp = false;
