@@ -1239,7 +1239,7 @@
 
             const senderDiv = document.createElement('div');
             senderDiv.classList.add('message-sender');
-            senderDiv.textContent = sender === 'User' ? 'You' : (modelSelect.value.split(':')[0] || 'AI');
+            senderDiv.textContent = sender === 'User' ? 'Вы' : (modelSelect.value.split(':')[0] || 'AI');
             messageBubble.appendChild(senderDiv);
 
             if (sender === 'User' && attachedFilenamesArray && attachedFilenamesArray.length > 0) {
@@ -1650,10 +1650,10 @@
             }
 
             isAwaitingResponse = true; sendButton.disabled = true; userInput.disabled = true; fileManagementArea.classList.add('disabled-drop-zone');
-            displayMessage("Пользователь", messageText, messageId, scrapedPreambleForUserDisplay || null, false, attachedFiles.map(f => f.name));
+            displayMessage("User", messageText, messageId, scrapedPreambleForUserDisplay || null, false, attachedFiles.map(f => f.name));
             userInput.value = ''; adjustTextareaHeight(); updateInputHighlighting();
 
-            const aiMessageElements = displayMessage("ИИ", "<em>Печатает...</em>", messageId, null, true);
+            const aiMessageElements = displayMessage("AI", "<em>Печатает...</em>", messageId, null, true);
             currentAiMessageContentDiv = aiMessageElements.contentDiv; currentAiMessageContentDiv.dataset.rawMarkdown = "";
 
             let userMessageForApi = "";
