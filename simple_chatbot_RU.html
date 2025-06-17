@@ -89,6 +89,24 @@
                 width: auto;
             }
 
+        .remove-message-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(192, 0, 0, 0.7);
+            color: white;
+            border: none;
+            max-width: 10%;
+            padding: 4px 6px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+            .remove-message-btn:hover {
+                    background-color: rgba(160, 0, 0, 0.8);
+            }
+
         #update-ollama-url-button {
             flex-shrink: 0;
             width: 38px;
@@ -171,6 +189,7 @@
         }
 
         .message-bubble {
+            position: relative;
             padding: 12px 16px;
             border-radius: 6px;
             max-width: 85%;
@@ -1178,9 +1197,45 @@
             });
         }
 
-        function displayMessage(sender, mainText, scrapedInfoSummary = null, isStreaming = false, attachedFilenamesArray = null) {
+        function removeMessage(messageId) {
+            const messageBubble = document.getElementById(messageId);
+            if (messageBubble) {
+                messageBubble.remove();
+
+                // Optional: remove from conversation history
+                removeMessageFromHistory(messageId);
+                removeMessageFromUIHistory(messageId);
+            }
+        }
+
+        function removeMessageFromHistory(messageId) {
+            let conversationHistoryTemp = conversationHistory();
+            conversationHistoryTemp = conversationHistoryTemp.filter(message => {
+                return message.id !== messageId;
+            });
+
+            // update localStorage:
+            localStorage.setItem('conversationHistory', JSON.stringify(conversationHistoryTemp));
+        }
+
+        function removeMessageFromUIHistory(messageId) {
+            let conversationHistoryTemp = conversationHistoryUI();
+            conversationHistoryTemp = conversationHistoryTemp.filter(message => {
+                let messageElement = convertToDOM(message)[0];
+                if (messageElement) {
+                    return messageElement.id !== messageId;
+                }
+                return true;
+            });
+
+            // update localStorage:
+            localStorage.setItem('conversationHistoryUI', JSON.stringify(conversationHistoryTemp));
+        }
+
+        function displayMessage(sender, mainText, messageId, scrapedInfoSummary = null, isStreaming = false, attachedFilenamesArray = null) {
             const messageBubble = document.createElement('div');
             messageBubble.classList.add('message-bubble', sender.toLowerCase() + '-message');
+            messageBubble.id = messageId;
 
             const senderDiv = document.createElement('div');
             senderDiv.classList.add('message-sender');
@@ -1194,6 +1249,17 @@
                 attachmentNoteDiv.innerHTML = `Прикрепленные файлы: ${filenamesString}`;
                 messageBubble.appendChild(attachmentNoteDiv);
             }
+
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('remove-message-btn');
+            deleteButton.innerHTML = '×';
+            deleteButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent event bubbling
+                console.log(messageBubble.id);
+                const messageId = messageBubble.id;
+                removeMessage(messageId);
+            });
+            messageBubble.appendChild(deleteButton);
 
             const contentDiv = document.createElement('div');
             contentDiv.classList.add('message-content');
@@ -1232,7 +1298,7 @@
             chatMessagesArea.appendChild(messageBubble);
             if (sender === 'User') {
                 saveMessageUI(messageBubble);
-            }                                                    
+            }
             scrollToBottom();
             return { messageBubble, contentDiv };
         }
@@ -1500,9 +1566,15 @@
 
         systemPromptInput.addEventListener('input', () => saveSystemPrompt(systemPromptInput.value.trim()));
 
+        function generateUniqueId() {
+            return 'message-' + Math.random().toString(36).substring(2, 15);
+        }
+
         async function sendMessage() {
             userScrolledUp = false;
             const messageText = userInput.value.trim();
+            const messageId = generateUniqueId();
+            const messageIdAi = generateUniqueId() + '-ai';
             const selectedModel = modelSelect.value;
             const systemPrompt = systemPromptInput.value.trim();
             const shouldScrapeUrls = scrapeUrlCheckbox.checked;
@@ -1578,10 +1650,10 @@
             }
 
             isAwaitingResponse = true; sendButton.disabled = true; userInput.disabled = true; fileManagementArea.classList.add('disabled-drop-zone');
-            displayMessage("User", messageText, scrapedPreambleForUserDisplay || null, false, attachedFiles.map(f => f.name));
+            displayMessage("Пользователь", messageText, messageId, scrapedPreambleForUserDisplay || null, false, attachedFiles.map(f => f.name));
             userInput.value = ''; adjustTextareaHeight(); updateInputHighlighting();
 
-            const aiMessageElements = displayMessage("ИИ", "<em>Печатает...</em>", null, true);
+            const aiMessageElements = displayMessage("ИИ", "<em>Печатает...</em>", messageId, null, true);
             currentAiMessageContentDiv = aiMessageElements.contentDiv; currentAiMessageContentDiv.dataset.rawMarkdown = "";
 
             let userMessageForApi = "";
@@ -1632,7 +1704,7 @@
                 let historyUserContent = messageText || "(Нет написанного сообщения)";
                 if (attachedFiles.length > 0) historyUserContent = `(Прикреплено: ${attachedFiles.map(f => `\`${escapeHTML(f.name)}\``).join(', ')}) ${historyUserContent}`;
                 if (scrapedPreambleForUserDisplay && scrapedCount > 0) historyUserContent += `\n*(Скрейпировано ${scrapedCount} URL)*`;
-                saveMessage({ role: "user", content: historyUserContent.trim() });
+                saveMessage({ role: "user", content: historyUserContent.trim(), id: messageId });
 
                 const reader = response.body.getReader(); const decoder = new TextDecoder(); let aiResponseContent = "";
                 if (currentAiMessageContentDiv && currentAiMessageContentDiv.innerHTML.includes("<em>Печатает...</em>")) { currentAiMessageContentDiv.innerHTML = ''; currentAiMessageContentDiv.dataset.rawMarkdown = ''; }
@@ -1652,7 +1724,7 @@
                         } catch (e) { console.warn("Failed to parse JSON line from stream:", line, e); }
                     }
                 }
-                saveMessage({ role: "assistant", content: aiResponseContent });
+                saveMessage({ role: "assistant", content: aiResponseContent, id: messageIdAi });
             } catch (error) {
                 if (error.name === 'AbortError') {
                     console.log('Fetch stream aborted by user reset.'); // This is expected during a reset.
