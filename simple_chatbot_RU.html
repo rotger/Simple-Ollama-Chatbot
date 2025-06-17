@@ -1255,7 +1255,7 @@
             deleteButton.innerHTML = '×';
             deleteButton.addEventListener('click', (e) => {
                 e.stopPropagation(); // Prevent event bubbling
-                console.log(messageBubble.id);
+                console.log("Removing message: " + messageBubble.id);
                 const messageId = messageBubble.id;
                 removeMessage(messageId);
             });
@@ -1653,7 +1653,7 @@
             displayMessage("User", messageText, messageId, scrapedPreambleForUserDisplay || null, false, attachedFiles.map(f => f.name));
             userInput.value = ''; adjustTextareaHeight(); updateInputHighlighting();
 
-            const aiMessageElements = displayMessage("AI", "<em>Печатает...</em>", messageId, null, true);
+            const aiMessageElements = displayMessage("AI", "<em>Печатает...</em>", messageIdAi, null, true);
             currentAiMessageContentDiv = aiMessageElements.contentDiv; currentAiMessageContentDiv.dataset.rawMarkdown = "";
 
             let userMessageForApi = "";

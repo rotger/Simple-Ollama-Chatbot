@@ -177,7 +177,7 @@
 1656c1656
 <             const aiMessageElements = displayMessage("AI", "<em>Typing...</em>", messageIdAi, null, true);
 ---
->             const aiMessageElements = displayMessage("AI", "<em>Печатает...</em>", messageId, null, true);
+>             const aiMessageElements = displayMessage("AI", "<em>Печатает...</em>", messageIdAi, null, true);
 1660,1662c1660,1662
 <             if (scrapedUrlContentForApi) userMessageForApi += `The user provided URLs with the following extracted content:\n${scrapedUrlContentForApi}\n--- End of Extracted URL Content ---\n\n`;
 <             if (messageText) userMessageForApi += `User's typed message:\n${messageText}\n`;

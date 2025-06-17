@@ -1255,7 +1255,7 @@
             deleteButton.innerHTML = '×';
             deleteButton.addEventListener('click', (e) => {
                 e.stopPropagation(); // Prevent event bubbling
-                console.log(messageBubble.id);
+                console.log("Removing message: " + messageBubble.id);
                 const messageId = messageBubble.id;
                 removeMessage(messageId);
             });
