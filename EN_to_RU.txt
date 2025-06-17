@@ -92,6 +92,10 @@
 <                             setTimeout(() => { copyButton.textContent = 'Copy'; }, 2000);
 ---
 >                             setTimeout(() => { copyButton.textContent = 'Скопировать'; }, 2000);
+1242c1242
+<             senderDiv.textContent = sender === 'User' ? 'You' : (modelSelect.value.split(':')[0] || 'AI');
+---
+>             senderDiv.textContent = sender === 'User' ? 'Вы' : (modelSelect.value.split(':')[0] || 'AI');
 1249c1249
 <                 attachmentNoteDiv.innerHTML = `Attached file(s): ${filenamesString}`;
 ---
@@ -170,14 +174,10 @@
 ---
 >                 if (!selectedModel) { alert("Пожалуйста выберите модель."); modelSelect.focus(); }
 >                 if (isAwaitingResponse) console.log("Уже ожидается ответ.");
-1653c1653
-<             displayMessage("User", messageText, messageId, scrapedPreambleForUserDisplay || null, false, attachedFiles.map(f => f.name));
----
->             displayMessage("Пользователь", messageText, messageId, scrapedPreambleForUserDisplay || null, false, attachedFiles.map(f => f.name));
 1656c1656
 <             const aiMessageElements = displayMessage("AI", "<em>Typing...</em>", messageIdAi, null, true);
 ---
->             const aiMessageElements = displayMessage("ИИ", "<em>Печатает...</em>", messageId, null, true);
+>             const aiMessageElements = displayMessage("AI", "<em>Печатает...</em>", messageId, null, true);
 1660,1662c1660,1662
 <             if (scrapedUrlContentForApi) userMessageForApi += `The user provided URLs with the following extracted content:\n${scrapedUrlContentForApi}\n--- End of Extracted URL Content ---\n\n`;
 <             if (messageText) userMessageForApi += `User's typed message:\n${messageText}\n`;
