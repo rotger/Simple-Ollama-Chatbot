@@ -93,18 +93,31 @@
             position: absolute;
             top: 5px;
             right: 5px;
-            background-color: rgba(192, 0, 0, 0.7);
-            color: white;
-            border: none;
-            max-width: 10%;
+            border: 1px solid #d0d7de;
             padding: 4px 6px;
             cursor: pointer;
             font-size: 12px;
             border-radius: 4px;
         }
 
-            .remove-message-btn:hover {
-                    background-color: rgba(160, 0, 0, 0.8);
+        .user-remove-btn {
+            background-color: #EFF6FF;
+            border-color: #C6DBEF;
+            color: #24292f;
+        }
+
+        .ai-remove-btn {
+            background-color: #f6f8fa;
+            border-color: #d0d7de;
+            color: #24292f;
+        }
+
+            .user-remove-btn:hover {
+                background-color: #F0A0A5;
+            }
+
+            .ai-remove-btn:hover {
+                background-color: #EE9A9C;
             }
 
         #update-ollama-url-button {
@@ -718,6 +731,26 @@
                 color: #fff;
             }
 
+            .dark-theme .user-remove-btn {
+                background-color: #3f3f3f;
+                border-color: #444;
+                color: #fff;
+            }
+
+            .dark-theme .ai-remove-btn {
+                background-color: #282828;
+                border-color: #333;
+                color: #fff;
+            }
+
+                .dark-theme .user-remove-btn:hover {
+                    background-color: #673636;
+                }
+
+                .dark-theme .ai-remove-btn:hover {
+                    background-color: #501F1F;
+                }
+
             .dark-theme .model-selector select, .dark-theme .model-selector input[type="text"] {
                 border-color: #555;
                 background-color: #333;
@@ -1251,7 +1284,7 @@
             }
 
             const deleteButton = document.createElement('button');
-            deleteButton.classList.add('remove-message-btn');
+            deleteButton.classList.add('remove-message-btn', sender.toLowerCase() + '-remove-btn');
             deleteButton.innerHTML = '×';
             deleteButton.addEventListener('click', (e) => {
                 e.stopPropagation(); // Prevent event bubbling
