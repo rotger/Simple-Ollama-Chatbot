@@ -1643,7 +1643,7 @@
                     for (const line of lines) {
                         try {
                             const parsedLine = JSON.parse(line); let hasNewDataToRender = false;
-                            if (parsedLine.message && typeof parsedLine.message.thinking === 'string') { currentExternalThinkContent = parsedLine.message.thinking.trim(); hasNewDataToRender = true; }
+                            if (parsedLine.message && typeof parsedLine.message.thinking === 'string' && parsedLine.message.thinking !== '') { currentExternalThinkContent += parsedLine.message.thinking; hasNewDataToRender = true; }
                             if (parsedLine.message && typeof parsedLine.message.content === 'string') {
                                 const contentPiece = parsedLine.message.content; aiResponseContent += contentPiece;
                                 currentAiMessageContentDiv.dataset.rawMarkdown = (currentAiMessageContentDiv.dataset.rawMarkdown || "") + contentPiece; hasNewDataToRender = true;
