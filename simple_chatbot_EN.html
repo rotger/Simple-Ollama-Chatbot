@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://ollama.com/public/icon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://ollama.com/public/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="https://ollama.com/public/icon-48x48.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="https://ollama.com/public/icon-64x64.png">
     <title>Ollama Standalone Chat</title>
 
     <link id="prism-link" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -1256,9 +1260,9 @@
                 const thinkSectionHtml = `
                             <div class="collapsible-think-section">
                                 <div class="think-header" data-think-block-id="${block.id}">
-                                    <span>AI Thoughts</span> <span class="toggle-icon">[+]</span>
+                                    <span>AI Thoughts</span> <span class="toggle-icon">[-]</span>
                                 </div>
-                                <div class="think-content" id="think-content-${block.id}" style="display:none;">
+                                <div class="think-content" id="think-content-${block.id}" style="display:block;">
                                     ${marked.parse(block.rawContent)}
                                 </div>
                             </div>`;
@@ -1298,39 +1302,58 @@
             if (!isAwaitingResponse || !currentAiMessageContentDiv) return;
 
             const accumulatedMainContent = currentAiMessageContentDiv.dataset.rawMarkdown || "";
+
+            // Clear "Typing..." placeholder on first content arrival
             if (currentAiMessageContentDiv.innerHTML.includes("<em>Typing...</em>")) {
                 currentAiMessageContentDiv.innerHTML = '';
             }
 
-            let combinedHtmlToRender = "";
-            let mainContentThinkBlocks = [];
-
+            // --- External Think Section: update in-place to preserve expanded/collapsed state ---
+            // A stable DOM element is reused across chunks instead of being rebuilt every time,
+            // so the user can expand/collapse/scroll the section while it is still streaming.
             if (externalThinkContent && externalThinkContent.trim() !== "") {
-                const externalThinkBlockId = `ext-think-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-                combinedHtmlToRender += `
-                            <div class="collapsible-think-section">
-                                <div class="think-header" data-think-block-id="${externalThinkBlockId}">
-                                    <span>AI Thoughts (Model Thinking)</span> <span class="toggle-icon">[+]</span>
+                let thinkSection = currentAiMessageContentDiv.querySelector('.collapsible-think-section[data-streaming-think="true"]');
+                if (!thinkSection) {
+                    // First thinking chunk: create the section once and prepend it
+                    thinkSection = document.createElement('div');
+                    thinkSection.className = 'collapsible-think-section';
+                    thinkSection.dataset.streamingThink = 'true';
+                    thinkSection.innerHTML = `
+                                <div class="think-header" data-think-block-id="ext-think-streaming">
+                                    <span>AI Thoughts (Model Thinking)</span> <span class="toggle-icon">[-]</span>
                                 </div>
-                                <div class="think-content" id="think-content-${externalThinkBlockId}" style="display:none;">
-                                    ${marked.parse(externalThinkContent)}
-                                </div>
-                            </div>`;
+                                <div class="think-content" id="think-content-ext-think-streaming" style="display:block;"></div>`;
+                    const mainContentDiv = currentAiMessageContentDiv.querySelector('.streaming-main-content');
+                    currentAiMessageContentDiv.insertBefore(thinkSection, mainContentDiv || null);
+                    addThinkBlockListeners(currentAiMessageContentDiv);
+                }
+                // Only update the inner content — the section element itself is preserved
+                const thinkContentEl = thinkSection.querySelector('.think-content');
+                if (thinkContentEl) {
+                    thinkContentEl.innerHTML = marked.parse(externalThinkContent);
+                }
+            }
+
+            // --- Main Response Content: rebuild in a dedicated stable container ---
+            let mainContentDiv = currentAiMessageContentDiv.querySelector('.streaming-main-content');
+            if (!mainContentDiv) {
+                mainContentDiv = document.createElement('div');
+                mainContentDiv.className = 'streaming-main-content';
+                currentAiMessageContentDiv.appendChild(mainContentDiv);
             }
 
             if (accumulatedMainContent) {
                 const { processedMarkdown, thinkBlocks } = processThinkTagsInMarkdown(accumulatedMainContent);
-                mainContentThinkBlocks = thinkBlocks;
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = marked.parse(processedMarkdown);
-                const mainContentContainer = document.createElement('div');
-                while (tempDiv.firstChild) mainContentContainer.appendChild(tempDiv.firstChild);
-                combinedHtmlToRender += mainContentContainer.innerHTML;
+                mainContentDiv.innerHTML = '';
+                while (tempDiv.firstChild) mainContentDiv.appendChild(tempDiv.firstChild);
+                renderThinkBlocksHTML(mainContentDiv, thinkBlocks);
+                addThinkBlockListeners(mainContentDiv);
+            } else {
+                mainContentDiv.innerHTML = '';
             }
 
-            currentAiMessageContentDiv.innerHTML = combinedHtmlToRender;
-            renderThinkBlocksHTML(currentAiMessageContentDiv, mainContentThinkBlocks);
-            addThinkBlockListeners(currentAiMessageContentDiv);
             Prism.highlightAllUnder(currentAiMessageContentDiv);
             addCopyButtonsToCodeBlocks(currentAiMessageContentDiv);
             scrollToBottom();
@@ -1348,9 +1371,9 @@
                     finalCombinedHtml += `
                                 <div class="collapsible-think-section">
                                     <div class="think-header" data-think-block-id="${externalThinkBlockId}">
-                                        <span>AI Thoughts (Model Thinking)</span> <span class="toggle-icon">[+]</span>
+                                        <span>AI Thoughts (Model Thinking)</span> <span class="toggle-icon">[-]</span>
                                     </div>
-                                    <div class="think-content" id="think-content-${externalThinkBlockId}" style="display:none;">
+                                    <div class="think-content" id="think-content-${externalThinkBlockId}" style="display:block;">
                                         ${marked.parse(externalThinkContent)}
                                     </div>
                                 </div>`;
@@ -1643,7 +1666,7 @@
                     for (const line of lines) {
                         try {
                             const parsedLine = JSON.parse(line); let hasNewDataToRender = false;
-                            if (parsedLine.message && typeof parsedLine.message.thinking === 'string') { currentExternalThinkContent = parsedLine.message.thinking.trim(); hasNewDataToRender = true; }
+                            if (parsedLine.message && typeof parsedLine.message.thinking === 'string' && parsedLine.message.thinking !== '') { currentExternalThinkContent += parsedLine.message.thinking; hasNewDataToRender = true; }
                             if (parsedLine.message && typeof parsedLine.message.content === 'string') {
                                 const contentPiece = parsedLine.message.content; aiResponseContent += contentPiece;
                                 currentAiMessageContentDiv.dataset.rawMarkdown = (currentAiMessageContentDiv.dataset.rawMarkdown || "") + contentPiece; hasNewDataToRender = true;
